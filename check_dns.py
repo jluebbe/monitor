@@ -8,6 +8,11 @@ ctx = ub_ctx()
 #ctx.add_ta_file("/etc/unbound/root.key")
 ctx.set_option("auto-trust-anchor-file:", "root.key")
 
-status, result = ctx.resolve("stratum0.net", RR_TYPE_A, RR_CLASS_IN)
-print status, result.secure
+
+def check(name):
+  status, result = ctx.resolve(name, RR_TYPE_A, RR_CLASS_IN)
+  return (name, status, result.secure)
+
+print check("stratum0.net")
+print check("stratum0.org")
 
