@@ -25,6 +25,13 @@ def fetch(url, timeout=10):
         url = urlparse.urlparse("%s://%s%s"%(baseurl.scheme, baseurl.netloc, meta['href']))
       return fetch(url.geturl())
 
-print pretty_json(fetch("https://hickerspace.org"))
-print pretty_json(fetch("https://stratum0.org"))
+#print pretty_json(fetch("https://hickerspace.org"))
+#print pretty_json(fetch("https://stratum0.org"))
+
+from orm import session, SpaceAPI
+
+l = session.query(SpaceAPI).all()
+for x in l:
+    x.data = fetch(x.name)
+    session.commit()
 

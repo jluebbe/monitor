@@ -15,6 +15,13 @@ def fetch(url, timeout=10):
   page.headers['status'] =  page.status_code
   return dict(page.headers)
 
-print fetch("http://totalueberwachung.de")
-print fetch("https://stratum0.org")
+#print fetch("http://totalueberwachung.de")
+#print fetch("https://stratum0.org")
+
+from orm import session, HTTPService
+
+l = session.query(HTTPService).all()
+for x in l:
+    x.data = fetch(x.name)
+    session.commit()
 

@@ -99,6 +99,8 @@ if __name__=="__main__":
     hickerspace = SpaceAPI(name="https://hickerspace.org")
     hickerspace.children.append(HTTPService(name="https://hickerspace.org"))
     session.add(hickerspace)
+    session.add(HTTPService(name="http://totalueberwachung.de"))
+    session.add(HTTPService(name="https://stratum0.org"))
     session.commit()
     print "Nodes:"
     pprint(session.query(Node).all())
