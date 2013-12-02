@@ -30,8 +30,10 @@ def fetch(url, timeout=10):
 
 from orm import session, SpaceAPI
 
+import sqlalchemy
+
 l = session.query(SpaceAPI).all()
 for x in l:
-    x.data = fetch(x.name)
+    x.data["spaceapi"] = fetch(x.name)
     session.commit()
 

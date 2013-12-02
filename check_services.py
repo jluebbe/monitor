@@ -61,11 +61,23 @@ def show(hostname):
   data.update(find_dnssd(hostname))
   pprint({hostname: data})
 
-show("dns-sd.org")
-show("google.com")
-show("stratum0.org")
-show("stratum0blalssdf.net")
-show("stratum0.net")
-show("totalueberwachung.de")
-show("sipgate.de")
+#show("dns-sd.org")
+#show("google.com")
+#show("stratum0.org")
+#show("stratum0blalssdf.net")
+#show("stratum0.net")
+#show("totalueberwachung.de")
+#show("sipgate.de")
+
+from orm import session, DomainName
+
+for x in session.query(DomainName):
+    hostname = x.name
+    data = {}
+    data.update(find_basic(hostname))
+    data.update(find_srv(hostname))
+    data.update(find_dnssd(hostname))
+    x.data["domainname"] = data
+    session.commit()
+    pprint({hostname: data})
 

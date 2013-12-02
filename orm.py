@@ -63,13 +63,14 @@ class Node(Base):
     __tablename__ = "nodes"
 
     id = Column(Integer, primary_key=True)
-    type = Column(String(16))
+    type = Column(String(16), index=True)
     parent_id = Column(Integer, ForeignKey('nodes.id'))
     created = Column(DateTime, nullable=False, default=func.now())
+    # FIXME: if the check results in an unchanged Node, updated is not changed
     updated = Column(DateTime, nullable=False, index=True, default=func.now(), onupdate=func.now())
-    name = Column(String())
-    conf = Column(JSONEncodedDict())
-    data = Column(JSONEncodedDict())
+    name = Column(String(), nullable=False)
+    conf = Column(JSONEncodedDict(), nullable=False, default={})
+    data = Column(JSONEncodedDict(), nullable=False, default={})
     __mapper_args__ = {'polymorphic_on': type}
 
     children = relationship("Node",
@@ -86,6 +87,12 @@ class SpaceAPI(Node):
 class HTTPService(Node):
     __mapper_args__ = {'polymorphic_identity': 'httpservice'}
 
+class HostName(Node):
+    __mapper_args__ = {'polymorphic_identity': 'hostname'}
+
+class DomainName(HostName):
+    __mapper_args__ = {'polymorphic_identity': 'domainname'}
+
 path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'monitor.sqlite')
 engine = create_engine('sqlite:///%s' % path, echo=True)
 Base.metadata.create_all(engine)
@@ -98,9 +105,15 @@ if __name__=="__main__":
     session.query(Node).delete()
     hickerspace = SpaceAPI(name="https://hickerspace.org")
     hickerspace.children.append(HTTPService(name="https://hickerspace.org"))
+    hickerspace.children.append(DomainName(name="hickerspace.org"))
     session.add(hickerspace)
     session.add(HTTPService(name="http://totalueberwachung.de"))
-    session.add(HTTPService(name="https://stratum0.org"))
+    stratum0 = SpaceAPI(name="https://stratum0.org")
+    stratum0.children.append(HTTPService(name="https://stratum0.org"))
+    stratum0.children.append(DomainName(name="stratum0.org"))
+    stratum0.children.append(DomainName(name="stratum0.net"))
+    stratum0.children.append(HostName(name="status.stratum0.org"))
+    session.add(stratum0)
     session.commit()
     print "Nodes:"
     pprint(session.query(Node).all())

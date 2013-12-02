@@ -22,6 +22,6 @@ from orm import session, HTTPService
 
 l = session.query(HTTPService).all()
 for x in l:
-    x.data = fetch(x.name)
+    x.data["httpservice"] = fetch(x.name)
     session.commit()
 
