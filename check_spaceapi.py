@@ -28,12 +28,11 @@ def fetch(url, timeout=10):
 #print pretty_json(fetch("https://hickerspace.org"))
 #print pretty_json(fetch("https://stratum0.org"))
 
-from orm import session, SpaceAPI
+from orm import session, SpaceAPI, Result
 
 import sqlalchemy
 
-l = session.query(SpaceAPI).all()
-for x in l:
-    x.data["spaceapi"] = fetch(x.name)
+for x in session.query(SpaceAPI):
+    x.results.append(Result("spaceapi", fetch(x.name)))
     session.commit()
 

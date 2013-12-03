@@ -69,7 +69,7 @@ def show(hostname):
 #show("totalueberwachung.de")
 #show("sipgate.de")
 
-from orm import session, DomainName
+from orm import session, DomainName, Result
 
 for x in session.query(DomainName):
     hostname = x.name
@@ -77,7 +77,7 @@ for x in session.query(DomainName):
     data.update(find_basic(hostname))
     data.update(find_srv(hostname))
     data.update(find_dnssd(hostname))
-    x.data["domainname"] = data
+    x.results.append(Result("domainname", data))
     session.commit()
     pprint({hostname: data})
 

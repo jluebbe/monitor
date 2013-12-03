@@ -33,14 +33,14 @@ def find_cname(hostname):
     pass
   return result
 
-from orm import session, HostName
+from orm import session, HostName, Result
 
 for x in session.query(HostName):
     hostname = x.name
     data = {}
     data.update(find_address(hostname))
     data.update(find_cname(hostname))
-    x.data["hostname"] = data
+    x.results.append(Result("hostname", data))
     session.commit()
     pprint({hostname: data})
 

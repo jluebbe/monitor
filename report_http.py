@@ -24,10 +24,10 @@ def report(url, headers):
         if has_hsts(headers):
             print "+5 HSTS enabled"
 
-from orm import session, HTTPService
+from orm import session, HTTPService, Result
 
-for x in session.query(HTTPService).all():
+for x in session.query(HTTPService):
     url = x.name
-    headers = x.data["httpservice"]
+    headers = x.results.filter(Result.method=="httpservice").first().data
     report(url, headers)
 

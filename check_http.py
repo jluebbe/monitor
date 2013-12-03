@@ -18,10 +18,9 @@ def fetch(url, timeout=10):
 #print fetch("http://totalueberwachung.de")
 #print fetch("https://stratum0.org")
 
-from orm import session, HTTPService
+from orm import session, HTTPService, Result
 
-l = session.query(HTTPService).all()
-for x in l:
-    x.data["httpservice"] = fetch(x.name)
+for x in session.query(HTTPService):
+    x.results.append(Result("httpservice", fetch(x.name)))
     session.commit()
 
