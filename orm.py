@@ -4,7 +4,7 @@ import collections
 import json
 import os.path
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from pprint import pprint
 
@@ -16,6 +16,8 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import ForeignKeyConstraint, Index
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import TypeDecorator, VARCHAR
+
+from sqlalchemy import event
 
 class JSONEncodedDict(TypeDecorator):
     "Represents an immutable structure as a json-encoded string."
@@ -88,11 +90,23 @@ class Node(Base):
     def __repr__(self):
         return "<%s(%r, %r, created=%s)>" % (self.__class__.__name__, self.id, self.name, self.created)
 
-class SpaceAPI(Node):
-    __mapper_args__ = {'polymorphic_identity': 'spaceapi'}
+    def is_expired(self, method, age=300):
+        limit = datetime.utcnow()-timedelta(seconds=age)
+        result = self.results.filter(Result.method==method).first()
+        if not result:
+            return True
+        if not result.data:
+            return True
+        return result.created < limit
 
 class HTTPService(Node):
     __mapper_args__ = {'polymorphic_identity': 'httpservice'}
+
+class JSONAPI(HTTPService):
+    __mapper_args__ = {'polymorphic_identity': 'jsonapi'}
+
+class SpaceAPI(HTTPService):
+    __mapper_args__ = {'polymorphic_identity': 'spaceapi'}
 
 class HostName(Node):
     __mapper_args__ = {'polymorphic_identity': 'hostname'}
@@ -122,6 +136,13 @@ class Result(Base):
 
 path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'monitor.sqlite')
 engine = create_engine('sqlite:///%s' % path, echo=True)
+@event.listens_for(engine, "connect")
+def on_connect(dbapi_con, con_record):
+    cursor = dbapi_con.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.close()
+
 Base.metadata.create_all(engine)
 
 from sqlalchemy.orm import sessionmaker
@@ -141,6 +162,7 @@ if __name__=="__main__":
     stratum0.children.append(DomainName(name="stratum0.net"))
     stratum0.children.append(HostName(name="status.stratum0.org"))
     session.add(stratum0)
+    session.add(JSONAPI(name="http://spaceapi.net/directory.json", conf={"discover": "spaceapidirectory"}))
     session.commit()
     print "Nodes:"
     pprint(session.query(Node).all())
