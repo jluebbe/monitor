@@ -1,0 +1,33 @@
+#!/usr/bin/python
+
+from urlparse import urlparse
+
+from orm import session, SpaceAPI, Result
+from orm import HTTPService, HostName
+
+def host_from_url(url):
+  assert(isinstance(url, basestring))
+  return urlparse(url).hostname
+
+def discover(node, data):
+    print node
+    existing = set((x.__class__, x.name) for x in node.children)
+    print existing
+    current = set()
+    if "url" in data:
+        current.add((HTTPService, data["url"]))
+        host = host_from_url(data["url"])
+        if not host is None:
+            current.add((HostName, host))
+    new = current - existing
+    for x in new:
+        node.children.append(x[0](name=x[1]))
+
+for node in session.query(SpaceAPI):
+    result = node.results.filter(Result.method=="spaceapi").first()
+    if result is None:
+        print "no spaceapi result for %s" % node
+    discover(node, result.data)
+
+session.commit()
+
