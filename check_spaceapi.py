@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+NAME = "spaceapi"
+
 import requests
 import json
 import urlparse
@@ -30,9 +32,9 @@ def fetch(url, timeout=10):
 
 from orm import session, SpaceAPI, Result
 
-import sqlalchemy
-
 for x in session.query(SpaceAPI):
-    x.results.append(Result("spaceapi", fetch(x.name)))
+    if not x.is_expired(NAME):
+        continue
+    x.results.append(Result(NAME, fetch(x.name)))
     session.commit()
 
