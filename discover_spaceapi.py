@@ -25,7 +25,7 @@ def discover(node, data):
 
 for node in session.query(SpaceAPI):
     result = node.results.filter(Result.method=="spaceapi").first()
-    if result is None:
+    if not result or not result.data:
         print "no spaceapi result for %s" % node
     discover(node, result.data)
 
