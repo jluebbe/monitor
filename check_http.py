@@ -20,6 +20,9 @@ def fetch(url, timeout=10):
   except requests.exceptions.SSLError as e:
     print e
     return {}
+  except requests.exceptions.Timeout as e:
+    print e
+    return {}
   except requests.exceptions.MissingSchema:
     return fetch("http://"+url.geturl(), timeout)
 
