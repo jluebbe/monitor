@@ -25,7 +25,7 @@ def fingerprint_to_pin(fingerprint):
 
 def fingerprint(spki, hash):
     """Calculate fingerprint of a SubjectPublicKeyInfo given a hash function."""
-    return ":".join("%02x" % c for c in hash(spki).digest())
+    return ":".join("%02x" % c for c in bytearray(hash(spki).digest()))
 
 def HPKP(cert):
     der = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
