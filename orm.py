@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from pprint import pprint
 
-from sqlalchemy import Column, DateTime, Integer, String, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, LargeBinary, ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import Mutable
@@ -133,6 +133,16 @@ class Result(Base):
 
     def __repr__(self):
         return "<%s(%r, %r, created=%s)>" % (self.__class__.__name__, self.node_id, self.method, self.created)
+
+class SSLCert(Base):
+    __tablename__ = "sslcerts"
+
+    id = Column(Integer, primary_key=True)
+    is_anchor = Column(Boolean, nullable=False)
+    issuer_id = Column(Integer, ForeignKey('sslcerts.id'))
+    subject = Column(String(), nullable=False)
+    subject_der = Column(LargeBinary(), nullable=False, unique=True, index=True)
+    data_der = Column(LargeBinary(), nullable=False, unique=True)
 
 path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'monitor.sqlite')
 engine = create_engine('sqlite:///%s' % path, echo=True)
