@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block body %}
+  <ul>
+  {% for node in nodes %}
+    <li><h2>{{ node.name }}</h2>{{ node|link }}
+  {% endfor %}
+  </ul>
+{% endblock %}
+

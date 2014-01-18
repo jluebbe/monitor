@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h1>node</h1>{{ node }}
+  <h2>results</h2>
+  <ul>
+  {% for result in results %}
+    <li><h3>{{ result.method }}</h3>{{ result }}
+    <pre>{{ result.data|pprint(True) }}</pre>
+    </li>
+  {% endfor %}
+  </ul>
+  <h2>parent</h2>
+  <ul>
+    <li><h3>{{ parent|link }}</h3>
+    </li>
+  </ul>
+  <h2>children</h2>
+  <ul>
+  {% for child in children %}
+    <li><h3>{{ child|link }}</h3>
+    </li>
+  {% endfor %}
+  </ul>
+{% endblock %}
+
