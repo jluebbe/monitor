@@ -15,5 +15,6 @@ print(cert)
 print("md5", hashlib.md5(cert).hexdigest())
 print("sha1", hashlib.sha1(cert).hexdigest())
 pprint.pprint(ssl_sock.getpeercert())
+pprint.pprint(ssl_sock.cipher())
 # note that closing the SSLSocket will also close the underlying socket
 ssl_sock.close()  

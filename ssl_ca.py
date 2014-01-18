@@ -28,30 +28,36 @@ def load_cert(filename):
 
 from orm import session, SSLCert
 
-for name in os.listdir(BASE):
-    name = os.path.join(BASE, name)
-    if not name.endswith('.pem'):
-        continue
-    if not os.path.isfile(name):
-        continue
-
-    cert = load_cert(name)
-    print(cert)
+def add_cert(cert, is_anchor=False):
+    #print(cert)
     print(cert.get_subject(), '%08x' % cert.get_subject().hash(), fingerprint(cert.get_subject().der(), hashlib.md5))
-    print(cert.get_subject().get_components())
-    print(cert.digest("sha1"))
-    print(hashlib.sha1(crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)).hexdigest())
+    #print(cert.get_subject().get_components())
+    #print(cert.digest("sha1"))
+    #print(hashlib.sha1(crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)).hexdigest())
 
+    subject = repr(cert.get_subject().get_components())
     subject_der = cert.get_subject().der()
-    results = session.query(SSLCert).filter_by(subject_der=subject_der).all()
+    data_der = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
+    results = session.query(SSLCert).filter_by(subject_der=subject_der, data_der=data_der).all()
     if results:
-        print "already have %s: %s" % (name, results)
-        continue
+        print "already have %s: %s" % (subject, results)
+        return
     x = SSLCert()
-    x.is_anchor = True
-    x.subject = repr(cert.get_subject().get_components())
+    x.is_anchor = is_anchor
+    x.subject = subject
     x.subject_der = subject_der
-    x.data_der = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
+    x.data_der = data_der
     session.add(x)
-    session.commit()
+
+if __name__=="__main__":
+    for name in os.listdir(BASE):
+        name = os.path.join(BASE, name)
+        if not name.endswith('.pem'):
+            continue
+        if not os.path.isfile(name):
+            continue
+
+        cert = load_cert(name)
+        add_cert(cert, is_anchor=True)
+        session.commit()
 
