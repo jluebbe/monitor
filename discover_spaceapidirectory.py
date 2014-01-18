@@ -18,6 +18,7 @@ for node in session.query(JSONAPI):
     result = node.results.filter(Result.method=="jsonapi").first()
     if result is None:
         print "no jsonapi result for %s" % node
+        continue
     discover(node, result.data)
     session.commit()
 

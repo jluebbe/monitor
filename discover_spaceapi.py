@@ -27,6 +27,7 @@ for node in session.query(SpaceAPI):
     result = node.results.filter(Result.method=="spaceapi").first()
     if not result or not result.data:
         print "no spaceapi result for %s" % node
+        continue
     discover(node, result.data)
 
 session.commit()
