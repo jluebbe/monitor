@@ -62,10 +62,23 @@ class MutationDict(Mutable, dict):
 
 MutationDict.associate_with(JSONEncodedDict)
 
+path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'monitor.sqlite')
+engine = create_engine('sqlite:///%s' % path, echo=True)
+@event.listens_for(engine, "connect")
+def on_connect(dbapi_con, con_record):
+    cursor = dbapi_con.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.close()
+
+from sqlalchemy.orm import scoped_session, sessionmaker
+session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+
 Base = declarative_base()
 
 class Node(Base):
     __tablename__ = "nodes"
+    query = session.query_property()
 
     id = Column(Integer, primary_key=True)
     type = Column(String(16), index=True)
@@ -114,8 +127,15 @@ class HostName(Node):
 class DomainName(HostName):
     __mapper_args__ = {'polymorphic_identity': 'domainname'}
 
+class IP4Address(Node):
+    __mapper_args__ = {'polymorphic_identity': 'ip4address'}
+
+class IP6Address(Node):
+    __mapper_args__ = {'polymorphic_identity': 'ip6address'}
+
 class Result(Base):
     __tablename__ = "results"
+    query = session.query_property()
 
     id = Column(Integer, primary_key=True)
     node_id = Column(Integer, ForeignKey(Node.id), nullable=False)
@@ -132,32 +152,25 @@ class Result(Base):
         self.data = data
 
     def __repr__(self):
-        return "<%s(%r, %r, created=%s)>" % (self.__class__.__name__, self.node_id, self.method, self.created)
+        return "<%s(%i, node=%i, %r, created=%s)>" % (self.__class__.__name__, self.id, self.node_id, self.method, self.created)
 
 class SSLCert(Base):
     __tablename__ = "sslcerts"
+    query = session.query_property()
 
     id = Column(Integer, primary_key=True)
     is_anchor = Column(Boolean, nullable=False)
     issuer_id = Column(Integer, ForeignKey('sslcerts.id'))
+    created = Column(DateTime, nullable=False, default=datetime.utcnow)
     subject = Column(String(), nullable=False)
-    subject_der = Column(LargeBinary(), nullable=False, unique=True, index=True)
-    data_der = Column(LargeBinary(), nullable=False, unique=True)
+    subject_der = Column(LargeBinary(), nullable=False, index=True)
+    data_der = Column(LargeBinary(), nullable=False, unique=True, index=True)
 
-path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'monitor.sqlite')
-engine = create_engine('sqlite:///%s' % path, echo=True)
-@event.listens_for(engine, "connect")
-def on_connect(dbapi_con, con_record):
-    cursor = dbapi_con.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL")
-    cursor.execute("PRAGMA synchronous=NORMAL")
-    cursor.close()
+    def __repr__(self):
+        return "<%s %i (%s, issuer=%r, created=%s)>" % (self.__class__.__name__, self.id, self.subject, self.issuer_id, self.created)
 
 Base.metadata.create_all(engine)
-
-from sqlalchemy.orm import sessionmaker
-Session = sessionmaker(bind=engine)
-session = Session()
+session.remove()
 
 if __name__=="__main__":
     session.query(Node).delete()
@@ -174,8 +187,8 @@ if __name__=="__main__":
     session.add(stratum0)
     session.add(JSONAPI(name="http://spaceapi.net/directory.json", conf={"discover": "spaceapidirectory"}))
     session.commit()
-    print "Nodes:"
+    print("Nodes:")
     pprint(session.query(Node).all())
-    print "HTTPServices:"
+    print("HTTPServices:")
     pprint(session.query(HTTPService).all())
 
