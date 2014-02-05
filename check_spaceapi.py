@@ -13,7 +13,10 @@ def pretty_json(data):
 def fetch(url, timeout=10):
   assert(isinstance(url, basestring))
   baseurl = url = urlparse.urlparse(url)
-  page = requests.get(url.geturl(), timeout=timeout)
+  try:
+    page = requests.get(url.geturl(), timeout=timeout)
+  except requests.exceptions.ConnectionError:
+    return {}
   try:
     return json.loads(page.content)
   except ValueError:

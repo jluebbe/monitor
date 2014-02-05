@@ -8,12 +8,12 @@ from datetime import datetime, timedelta
 
 from pprint import pprint
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, LargeBinary, ForeignKey
+from sqlalchemy import Table, Boolean, Column, DateTime, Integer, String, LargeBinary, ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.schema import ForeignKeyConstraint, Index
+from sqlalchemy.schema import ForeignKeyConstraint, Index, UniqueConstraint
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import TypeDecorator, VARCHAR
 
@@ -76,21 +76,32 @@ session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=en
 
 Base = declarative_base()
 
+class Link(Base):
+    __tablename__ = 'links'
+    query = session.query_property()
+
+    parent_id = Column(Integer, ForeignKey('nodes.id'), primary_key=True, index=True)
+    child_id = Column(Integer, ForeignKey('nodes.id'), primary_key=True, index=True)
+
 class Node(Base):
     __tablename__ = "nodes"
+    __table_args__ = (
+        Index('ix_nodes_unique', 'type', 'name', unique=True),
+    )
     query = session.query_property()
 
     id = Column(Integer, primary_key=True)
     type = Column(String(16), index=True)
-    parent_id = Column(Integer, ForeignKey('nodes.id'))
-    created = Column(DateTime, nullable=False, default=datetime.utcnow)
     name = Column(String(), nullable=False)
+    created = Column(DateTime, nullable=False, default=datetime.utcnow)
     conf = Column(JSONEncodedDict(), nullable=False, default={})
     __mapper_args__ = {'polymorphic_on': type}
 
     children = relationship("Node",
-        backref=backref('parent', remote_side=[id]),
-        cascade="all, delete, delete-orphan",
+        secondary="links",
+        primaryjoin=id==Link.parent_id,
+        secondaryjoin=id==Link.child_id,
+        backref=backref("parents")
     )
 
     results = relationship("Result",
@@ -99,6 +110,24 @@ class Node(Base):
         cascade="all, delete, delete-orphan",
         lazy="dynamic",
     )
+
+    # make objects unique on name (in the scoped session)
+    @classmethod
+    def __new__(cls, bases, name=None):
+        # skip when loading
+        if name is None:
+            return object.__new__(cls, bases)
+
+        with session.no_autoflush:
+            obj = cls.query.filter(Node.name == name).first()
+            if not obj:
+                obj = object.__new__(cls, bases)
+                obj.__init__(name)
+                session.add(obj)
+        return obj
+
+    def __init__(self, name):
+        self.name = name
 
     def __repr__(self):
         return "<%s(%r, %r, created=%s)>" % (self.__class__.__name__, self.id, self.name, self.created)
@@ -159,9 +188,9 @@ class SSLCert(Base):
     query = session.query_property()
 
     id = Column(Integer, primary_key=True)
+    created = Column(DateTime, nullable=False, default=datetime.utcnow)
     is_anchor = Column(Boolean, nullable=False)
     issuer_id = Column(Integer, ForeignKey('sslcerts.id'))
-    created = Column(DateTime, nullable=False, default=datetime.utcnow)
     subject = Column(String(), nullable=False)
     subject_der = Column(LargeBinary(), nullable=False, index=True)
     data_der = Column(LargeBinary(), nullable=False, unique=True, index=True)
@@ -173,19 +202,19 @@ Base.metadata.create_all(engine)
 session.remove()
 
 if __name__=="__main__":
-    session.query(Node).delete()
+    Link.query.delete()
+    Node.query.delete()
     hickerspace = SpaceAPI(name="https://hickerspace.org")
-    hickerspace.children.append(HTTPService(name="https://hickerspace.org"))
     hickerspace.children.append(DomainName(name="hickerspace.org"))
-    session.add(hickerspace)
-    session.add(HTTPService(name="http://totalueberwachung.de"))
+    hickerspace.children.append(HTTPService(name="https://hickerspace.org"))
+    HTTPService(name="http://totalueberwachung.de")
     stratum0 = SpaceAPI(name="https://stratum0.org")
     stratum0.children.append(HTTPService(name="https://stratum0.org"))
     stratum0.children.append(DomainName(name="stratum0.org"))
     stratum0.children.append(DomainName(name="stratum0.net"))
     stratum0.children.append(HostName(name="status.stratum0.org"))
-    session.add(stratum0)
-    session.add(JSONAPI(name="http://spaceapi.net/directory.json", conf={"discover": "spaceapidirectory"}))
+    directory = JSONAPI(name="http://spaceapi.net/directory.json")
+    directory.conf = {"discover": "spaceapidirectory"}
     session.commit()
     print("Nodes:")
     pprint(session.query(Node).all())

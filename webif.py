@@ -36,7 +36,7 @@ def node(id):
     return render_template("node.html",
                            node=node,
                            results=node.results.all(),
-                           parent=node.parent,
+                           parents=node.parents,
                            children=node.children)
 
 if __name__ == '__main__':

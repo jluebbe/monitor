@@ -23,6 +23,9 @@ def fetch(url, timeout=10):
   except requests.exceptions.Timeout as e:
     print e
     return {}
+  except requests.exceptions.ConnectionError as e:
+    print e
+    return {}
   except requests.exceptions.MissingSchema:
     return fetch("http://"+url.geturl(), timeout)
 
@@ -31,7 +34,7 @@ def fetch(url, timeout=10):
 
 from orm import session, HTTPService, Result
 
-for x in session.query(HTTPService):
+for x in HTTPService.query:
     print x.name
     if not x.is_expired(NAME):
         continue
