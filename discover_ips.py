@@ -7,7 +7,8 @@ from orm import IP4Address, IP6Address
 
 def discover(node, data):
     print node
-    existing = set((x.__class__, x.name) for x in node.children)
+    c = node.children["ips"]
+    existing = set((x.__class__, x.name) for x in c)
     print existing
     current = set()
     for address in data.get("a", []):
@@ -16,7 +17,7 @@ def discover(node, data):
         current.add((IP6Address, address))
     new = current - existing
     for x in new:
-        node.children.append(x[0](name=x[1]))
+        c.append(x[0](name=x[1]))
 
 for node in session.query(HostName):
     result = node.results.filter(Result.method=="hostname").first()

@@ -39,11 +39,14 @@ def node(id):
     method_parents = {}
     for crawler in node.parent_crawlers:
         method_parents.setdefault(crawler.method, []).append(crawler.parent)
+    peers = orm.Node.query.filter(orm.Node.name == node.name, orm.Node.id != node.id).all()
     return render_template("node.html",
                            node=node,
                            results=node.results.all(),
                            method_parents=method_parents,
-                           children=node.children)
+                           children=node.children,
+                           peers=peers,
+                           )
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)

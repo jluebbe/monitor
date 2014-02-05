@@ -15,7 +15,7 @@
     <li><h3>{{ method }}</h3>
     <ul>
     {% for parent in parents %}
-      <li><h4>{{ parent|link }}</h3></li>
+      <li><h4>{{ parent|link }}</h4></li>
     {% endfor %}
     </ul>
   {% endfor %}
@@ -26,9 +26,15 @@
     <li><h3>{{ method }}</h3>
     <ul>
     {% for child in children %}
-      <li><h4>{{ child|link }}</h3></li>
+      <li><h4>{{ child|link }}</h4></li>
     {% endfor %}
     </ul>
+  {% endfor %}
+  </ul>
+  <h2>peers</h2>
+  <ul>
+  {% for peer in peers %}
+    <li><h4>{{ peer|link }}</h4></li>
   {% endfor %}
   </ul>
 {% endblock %}

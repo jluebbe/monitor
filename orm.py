@@ -11,7 +11,6 @@ from pprint import pprint
 
 from sqlalchemy import Table, Boolean, Column, DateTime, Integer, String, LargeBinary, ForeignKey
 from sqlalchemy import create_engine
-from sqlalchemy import and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import relationship, backref
@@ -152,23 +151,23 @@ class Node(Base):
     # make objects unique on name (in the scoped session)
     # see http://www.sqlalchemy.org/trac/wiki/UsageRecipes/UniqueObject
     @classmethod
-    def __new__(cls, bases, name=None):
+    def __new__(cls, *args, **kwargs):
         # skip when loading
-        if name is None:
-            return object.__new__(cls, bases, name)
+        if not 'name' in kwargs:
+            return object.__new__(cls)
+        name = kwargs['name']
 
         with session.no_autoflush:
             new = [x for x in session.new if type(x) == cls and x.name == name]
             if new:
                 assert len(new) == 1
                 return new[0]
-            obj = Node.query.filter(and_(
-                Node.type == cls.__mapper_args__['polymorphic_identity'],
-                Node.name == name
-            )).first()
+            obj = Node.query.filter(
+                (Node.type == cls.__mapper_args__['polymorphic_identity']) & (Node.name == name)
+            ).first()
             if obj:
                 return obj
-            obj = object.__new__(cls, bases)
+            obj = object.__new__(cls)
             obj.__init__(name)
             session.add(obj)
         return obj
