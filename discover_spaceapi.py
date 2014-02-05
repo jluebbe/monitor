@@ -11,7 +11,8 @@ def host_from_url(url):
 
 def discover(node, data):
     print node
-    existing = set((x.__class__, x.name) for x in node.children)
+    c = node.children["spaceapi"]
+    existing = set((x.__class__, x.name) for x in c)
     print existing
     current = set()
     if "url" in data:
@@ -21,7 +22,7 @@ def discover(node, data):
             current.add((HostName, host))
     new = current - existing
     for x in new:
-        node.children.append(x[0](name=x[1]))
+        c.append(x[0](name=x[1]))
 
 for node in session.query(SpaceAPI):
     result = node.results.filter(Result.method=="spaceapi").first()

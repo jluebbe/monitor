@@ -3,6 +3,7 @@
 import collections
 import json
 import os.path
+import operator
 
 from datetime import datetime, timedelta
 
@@ -10,14 +11,19 @@ from pprint import pprint
 
 from sqlalchemy import Table, Boolean, Column, DateTime, Integer, String, LargeBinary, ForeignKey
 from sqlalchemy import create_engine
+from sqlalchemy import and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import ForeignKeyConstraint, Index, UniqueConstraint
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import TypeDecorator, VARCHAR
+from sqlalchemy.orm.collections import attribute_mapped_collection, collection, MappedCollection
+from sqlalchemy.ext.associationproxy import association_proxy
 
 from sqlalchemy import event
+
+#see /usr/share/doc/python-sqlalchemy-doc/examples/association/dict_of_sets_with_default.py
 
 class JSONEncodedDict(TypeDecorator):
     "Represents an immutable structure as a json-encoded string."
@@ -62,6 +68,11 @@ class MutationDict(Mutable, dict):
 
 MutationDict.associate_with(JSONEncodedDict)
 
+class DefaultMappedCollection(MappedCollection):
+    def __missing__(self, key):
+        self[key] = x = Crawler(key)
+        return x
+
 path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'monitor.sqlite')
 engine = create_engine('sqlite:///%s' % path, echo=True)
 @event.listens_for(engine, "connect")
@@ -76,12 +87,24 @@ session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=en
 
 Base = declarative_base()
 
-class Link(Base):
-    __tablename__ = 'links'
+links = Table('links', Base.metadata,
+    Column('crawler_id', Integer, ForeignKey('crawlers.id'), index=True),
+    Column('child_id', Integer, ForeignKey('nodes.id'), index=True),
+)
+
+class Crawler(Base):
+    __tablename__ = 'crawlers'
     query = session.query_property()
 
-    parent_id = Column(Integer, ForeignKey('nodes.id'), primary_key=True, index=True)
-    child_id = Column(Integer, ForeignKey('nodes.id'), primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
+    parent_id = Column(Integer, ForeignKey('nodes.id'), index=True)
+    method = Column(String(16), default='', index=True)
+
+    def __init__(self, method):
+        self.method = method
+
+    def __repr__(self):
+        return "<%s(%s on %r)>" % (self.__class__.__name__, self.method, self.parent)
 
 class Node(Base):
     __tablename__ = "nodes"
@@ -97,11 +120,26 @@ class Node(Base):
     conf = Column(JSONEncodedDict(), nullable=False, default={})
     __mapper_args__ = {'polymorphic_on': type}
 
-    children = relationship("Node",
-        secondary="links",
-        primaryjoin=id==Link.parent_id,
-        secondaryjoin=id==Link.child_id,
-        backref=backref("parents")
+    _child_crawlers = relationship("Crawler",
+        backref=backref("parent", viewonly=True),
+        collection_class=lambda: DefaultMappedCollection(operator.attrgetter('method')),
+        cascade="all, delete, delete-orphan",
+    )
+
+    children = association_proxy(
+        "_child_crawlers",
+        "children",
+    )
+
+    parent_crawlers = relationship("Crawler",
+        secondary=links,
+        backref=backref("children"),
+    )
+
+    # is this really useful?
+    parents = association_proxy(
+        "parent_crawlers",
+        "parent",
     )
 
     results = relationship("Result",
@@ -112,18 +150,27 @@ class Node(Base):
     )
 
     # make objects unique on name (in the scoped session)
+    # see http://www.sqlalchemy.org/trac/wiki/UsageRecipes/UniqueObject
     @classmethod
     def __new__(cls, bases, name=None):
         # skip when loading
         if name is None:
-            return object.__new__(cls, bases)
+            return object.__new__(cls, bases, name)
 
         with session.no_autoflush:
-            obj = cls.query.filter(Node.name == name).first()
-            if not obj:
-                obj = object.__new__(cls, bases)
-                obj.__init__(name)
-                session.add(obj)
+            new = [x for x in session.new if type(x) == cls and x.name == name]
+            if new:
+                assert len(new) == 1
+                return new[0]
+            obj = Node.query.filter(and_(
+                Node.type == cls.__mapper_args__['polymorphic_identity'],
+                Node.name == name
+            )).first()
+            if obj:
+                return obj
+            obj = object.__new__(cls, bases)
+            obj.__init__(name)
+            session.add(obj)
         return obj
 
     def __init__(self, name):
@@ -202,17 +249,17 @@ Base.metadata.create_all(engine)
 session.remove()
 
 if __name__=="__main__":
-    Link.query.delete()
+    Crawler.query.delete()
     Node.query.delete()
-    hickerspace = SpaceAPI(name="https://hickerspace.org")
-    hickerspace.children.append(DomainName(name="hickerspace.org"))
-    hickerspace.children.append(HTTPService(name="https://hickerspace.org"))
+    c = SpaceAPI(name="https://hickerspace.org").children["manual"]
+    c.append(DomainName(name="hickerspace.org"))
+    c.append(HTTPService(name="https://hickerspace.org"))
     HTTPService(name="http://totalueberwachung.de")
-    stratum0 = SpaceAPI(name="https://stratum0.org")
-    stratum0.children.append(HTTPService(name="https://stratum0.org"))
-    stratum0.children.append(DomainName(name="stratum0.org"))
-    stratum0.children.append(DomainName(name="stratum0.net"))
-    stratum0.children.append(HostName(name="status.stratum0.org"))
+    c = SpaceAPI(name="https://stratum0.org").children["manual"]
+    c.append(HTTPService(name="https://stratum0.org"))
+    c.append(DomainName(name="stratum0.org"))
+    c.append(DomainName(name="stratum0.net"))
+    c.append(HostName(name="status.stratum0.org"))
     directory = JSONAPI(name="http://spaceapi.net/directory.json")
     directory.conf = {"discover": "spaceapidirectory"}
     session.commit()

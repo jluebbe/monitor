@@ -2,7 +2,12 @@
 {% block body %}
   <ul>
   {% for node in nodes %}
-    <li><h2>{{ node.name }}</h2>{{ node|link }}
+    <li><h3>{{ node|link }}</h2>
+    <ul>
+    {% for crawler in node.parent_crawlers %}
+      <li>{{ crawler|link }}</li>
+    {% endfor %}
+    </ul>
   {% endfor %}
   </ul>
 {% endblock %}

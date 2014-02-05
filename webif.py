@@ -20,6 +20,8 @@ def link_filter(x):
     url = None
     if isinstance(x, orm.Node):
         url = u'/node/%i' % (x.id,)
+    if isinstance(x, orm.Crawler):
+        url = u'/node/%i' % (x.parent_id,)
     if url:
         return Markup('<a href="%s">%r</a>') % (url, x)
     else:
@@ -33,10 +35,14 @@ def index():
 @app.route('/node/<int:id>')
 def node(id):
     node = orm.Node.query.filter(orm.Node.id == id).first()
+    # move this to a read-only property on Node?
+    method_parents = {}
+    for crawler in node.parent_crawlers:
+        method_parents.setdefault(crawler.method, []).append(crawler.parent)
     return render_template("node.html",
                            node=node,
                            results=node.results.all(),
-                           parents=node.parents,
+                           method_parents=method_parents,
                            children=node.children)
 
 if __name__ == '__main__':
