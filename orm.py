@@ -202,6 +202,15 @@ class HostName(Node):
 class DomainName(HostName):
     __mapper_args__ = {'polymorphic_identity': 'domainname'}
 
+class MailServer(HostName):
+    __mapper_args__ = {'polymorphic_identity': 'mailserver'}
+
+class NameServer(HostName):
+    __mapper_args__ = {'polymorphic_identity': 'nameserver'}
+
+class XMPPServer(HostName):
+    __mapper_args__ = {'polymorphic_identity': 'xmppserver'}
+
 class IP4Address(Node):
     __mapper_args__ = {'polymorphic_identity': 'ip4address'}
 

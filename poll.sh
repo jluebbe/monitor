@@ -10,4 +10,10 @@ cd $(dirname $(readlink -fn -- "$0"))
 ./check_http.py
 ./discover_ips.py
 ./check_ip.py
+./discover_dns.py
+./check_services.py
+./discover_services.py
+./check_host.py
+./discover_ips.py
+./check_ip.py
 
