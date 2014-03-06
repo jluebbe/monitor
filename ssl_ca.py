@@ -38,16 +38,17 @@ def add_cert(cert, is_anchor=False):
     subject = repr(cert.get_subject().get_components())
     subject_der = cert.get_subject().der()
     data_der = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
-    results = session.query(SSLCert).filter_by(subject_der=subject_der, data_der=data_der).all()
-    if results:
-        print "already have %s: %s" % (subject, results)
-        return
+    result = session.query(SSLCert).filter_by(subject_der=subject_der, data_der=data_der).first()
+    if result:
+        print "already have %s: %s" % (subject, result)
+        return result
     x = SSLCert()
     x.is_anchor = is_anchor
     x.subject = subject
     x.subject_der = subject_der
     x.data_der = data_der
     session.add(x)
+    return x
 
 if __name__=="__main__":
     for name in os.listdir(BASE):
