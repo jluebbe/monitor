@@ -4,6 +4,7 @@ import collections
 import json
 import os.path
 import operator
+import urlparse
 
 from datetime import datetime, timedelta
 
@@ -105,6 +106,29 @@ class Crawler(Base):
     def __repr__(self):
         return "<%s(%s on %r)>" % (self.__class__.__name__, self.method, self.parent)
 
+def normalize(name):
+    url = urlparse.urlsplit(name)
+    if not url.scheme:
+        if name[-1] == '.':
+            return name[:-1]
+        return name
+    if url.hostname[-1] == '.':
+        hostname = url.hostname[:-1]
+    else:
+        hostname = url.hostname
+    if url.scheme == 'http':
+        port = url.port or 80
+    elif url.scheme == 'https':
+        port = url.port or 443
+    else:
+        port = url.port
+    if port:
+        netloc = '%s:%i' % (hostname, port)
+    else:
+        netloc = '%s' % (hostname,)
+    url = urlparse.urlunsplit((url.scheme, netloc, url.path, url.query, url.fragment))
+    return url
+
 class Node(Base):
     __tablename__ = "nodes"
     __table_args__ = (
@@ -156,6 +180,7 @@ class Node(Base):
         if not 'name' in kwargs:
             return object.__new__(cls)
         name = kwargs['name']
+        name = normalize(name)
 
         with session.no_autoflush:
             new = [x for x in session.new if type(x) == cls and x.name == name]
@@ -173,7 +198,7 @@ class Node(Base):
         return obj
 
     def __init__(self, name):
-        self.name = name
+        self.name = normalize(name)
 
     def __repr__(self):
         return "<%s(%r, %r, created=%s)>" % (self.__class__.__name__, self.id, self.name, self.created)
