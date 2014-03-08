@@ -296,8 +296,8 @@ Base.metadata.create_all(engine)
 session.remove()
 
 if __name__=="__main__":
-    Crawler.query.delete()
-    Node.query.delete()
+    #Crawler.query.delete()
+    #Node.query.delete()
     c = SpaceAPI(name="https://hickerspace.org").children["manual"]
     c.append(DomainName(name="hickerspace.org"))
     c.append(HTTPService(name="https://hickerspace.org"))
