@@ -5,7 +5,10 @@ import json
 import os.path
 import operator
 import hashlib
-import urlparse
+try:
+    import urlparse
+except ImportError: # python 3
+    import urllib.parse as urlparse
 
 from datetime import datetime, timedelta
 
@@ -109,7 +112,8 @@ class Crawler(Base):
 
 def normalize(name):
     url = urlparse.urlsplit(name)
-    if not url.scheme:
+    if not url.netloc:
+        name = name.lower()
         if name[-1] == '.':
             return name[:-1]
         return name
@@ -124,9 +128,9 @@ def normalize(name):
     else:
         port = url.port
     if port:
-        netloc = '%s:%i' % (hostname, port)
+        netloc = '%s:%i' % (hostname.lower(), port)
     else:
-        netloc = '%s' % (hostname,)
+        netloc = '%s' % (hostname.lower(),)
     url = urlparse.urlunsplit((url.scheme, netloc, url.path, url.query, url.fragment))
     return url
 
