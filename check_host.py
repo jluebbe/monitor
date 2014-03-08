@@ -53,7 +53,7 @@ from orm import session, HostName, Result
 for x in session.query(HostName):
     if not x.is_expired(NAME):
         continue
-    hostname = x.name
+    hostname = x.get_hostname()
     data = {}
     data.update(find_address(hostname))
     data.update(find_cname(hostname))

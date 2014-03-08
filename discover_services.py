@@ -12,13 +12,13 @@ def discover(node, data):
     print existing
     current = set()
     for name, proto, port in data.get("mx", []):
-        current.add((MailServer, name))
+        current.add((MailServer, "smtp://%s:%i" % (name, port)))
     for name, proto, port in data.get("ns", []):
         current.add((NameServer, name))
     for name, proto, port in data.get("xmpp-client", []):
-        current.add((XMPPServer, name))
+        current.add((XMPPServer, "xmpp-client://%s:%i" % (name, port)))
     for name, proto, port in data.get("xmpp-server", []):
-        current.add((XMPPServer, name))
+        current.add((XMPPServer, "xmpp-server://%s:%i" % (name, port)))
     new = current - existing
     for x in new:
         c.append(x[0](name=x[1]))

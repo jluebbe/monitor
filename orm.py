@@ -217,6 +217,12 @@ class Node(Base):
             return True
         return result.created < limit
 
+    def get_hostname(self):
+        url = urlparse.urlsplit(self.name)
+        if not url.hostname:
+            return self.name
+        return url.hostname
+
 class HTTPService(Node):
     __mapper_args__ = {'polymorphic_identity': 'httpservice'}
 
