@@ -287,7 +287,7 @@ class SSLCert(Base):
     data_der = Column(LargeBinary(), nullable=False, unique=True, index=True)
 
     def data_hash(self):
-        return ":".join("%02x" % c for c in bytearray(hashlib.sha256(self.data_der).digest()))
+        return "sha256/%s" % hashlib.sha256(self.data_der).hexdigest()
 
     def __repr__(self):
         return "<%s %i (%s, issuer=%r, created=%s)>" % (self.__class__.__name__, self.id, self.subject, self.issuer_id, self.created)
