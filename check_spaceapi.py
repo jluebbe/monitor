@@ -15,6 +15,12 @@ def fetch(url, timeout=10):
   baseurl = url = urlparse.urlparse(url)
   try:
     page = requests.get(url.geturl(), timeout=timeout)
+  except requests.exceptions.SSLError as e:
+    print e
+    return {}
+  except requests.exceptions.Timeout as e:
+    print e
+    return {}
   except requests.exceptions.ConnectionError:
     return {}
   try:
