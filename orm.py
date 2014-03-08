@@ -292,6 +292,27 @@ class SSLCert(Base):
     def __repr__(self):
         return "<%s %i (%s, issuer=%r, created=%s)>" % (self.__class__.__name__, self.id, self.subject, self.issuer_id, self.created)
 
+class SSLKey(Base):
+    __tablename__ = "sslkeys"
+    __table_args__ = (
+        Index('ix_sslkeys_unique', 'key', 'cert_id', unique=True),
+    )
+    query = session.query_property()
+
+    id = Column(Integer, primary_key=True)
+    key = Column(String(), nullable=False, index=True)
+    cert_id = Column(Integer, ForeignKey('sslcerts.id'))
+
+    cert = relationship("SSLCert",
+        backref=backref('keys', cascade="all, delete-orphan"),
+    )
+
+    def __init__(self, key):
+        self.key = key
+
+    def __repr__(self):
+        return "<%s(key=%i, cert=%i)>" % (self.__class__.__name__, self.key, self.cert)
+
 Base.metadata.create_all(engine)
 session.remove()
 

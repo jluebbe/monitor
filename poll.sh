@@ -16,4 +16,6 @@ cd $(dirname $(readlink -fn -- "$0"))
 ./check_host.py
 ./discover_ips.py
 ./check_ip.py
+./check_ssl.py
+./ssl_rekey.py
 
