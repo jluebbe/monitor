@@ -94,6 +94,7 @@ Base = declarative_base()
 links = Table('links', Base.metadata,
     Column('crawler_id', Integer, ForeignKey('crawlers.id'), index=True),
     Column('child_id', Integer, ForeignKey('nodes.id'), index=True),
+    Index('ix_links_unique', 'crawler_id', 'child_id', unique=True),
 )
 
 class Crawler(Base):
