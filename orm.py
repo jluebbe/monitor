@@ -111,30 +111,6 @@ class Crawler(Base):
     def __repr__(self):
         return "<%s(%s on %r)>" % (self.__class__.__name__, self.method, self.parent)
 
-def normalize(name):
-    url = urlparse.urlsplit(name)
-    if not url.netloc:
-        name = name.lower()
-        if name[-1] == '.':
-            return name[:-1]
-        return name
-    if url.hostname[-1] == '.':
-        hostname = url.hostname[:-1]
-    else:
-        hostname = url.hostname
-    if url.scheme == 'http':
-        port = url.port or 80
-    elif url.scheme == 'https':
-        port = url.port or 443
-    else:
-        port = url.port
-    if port:
-        netloc = '%s:%i' % (hostname.lower(), port)
-    else:
-        netloc = '%s' % (hostname.lower(),)
-    url = urlparse.urlunsplit((url.scheme, netloc, url.path, url.query, url.fragment))
-    return url
-
 class Node(Base):
     __tablename__ = "nodes"
     __table_args__ = (
@@ -186,9 +162,7 @@ class Node(Base):
         # skip when loading
         if not 'name' in kwargs:
             return object.__new__(cls)
-        name = kwargs['name']
-        if cls.__normalize_name__:
-            name = normalize(name)
+        name = cls.normalize(kwargs['name'])
 
         with session.no_autoflush:
             new = [x for x in session.new if type(x) == cls and x.name == name]
@@ -205,10 +179,36 @@ class Node(Base):
             session.add(obj)
         return obj
 
+    @classmethod
+    def normalize(cls, name):
+        if not cls.__normalize_name__:
+            return name
+        url = urlparse.urlsplit(name)
+        if not url.netloc:
+            name = name.lower()
+            if name[-1] == '.':
+                return name[:-1]
+            return name
+        if url.hostname[-1] == '.':
+            hostname = url.hostname[:-1]
+        else:
+            hostname = url.hostname
+        if url.scheme == 'http':
+            port = url.port or 80
+        elif url.scheme == 'https':
+            port = url.port or 443
+        else:
+            port = url.port
+        if port:
+            netloc = '%s:%i' % (hostname.lower(), port)
+        else:
+            netloc = '%s' % (hostname.lower(),)
+        url = urlparse.urlunsplit((url.scheme, netloc, url.path, url.query, url.fragment))
+        return url
+
     def __init__(self, name):
-        if self.__class__.__normalize_name__:
-            name = normalize(name)
-        self.name = name
+        self.name = self.__class__.normalize(name)
+        self.conf = {}
 
     def __repr__(self):
         return "<%s(%r, %r, created=%s)>" % (self.__class__.__name__, self.id, self.name, self.created)
