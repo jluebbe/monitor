@@ -270,6 +270,8 @@ class EMailAddress(Node):
 
     @classmethod
     def normalize(cls, name):
+        if not '@' in name:
+            raise ValueError("invalid email address '%s'" % name)
         url = urlparse.urlsplit(name)
         if not url.netloc:
             name = name.lower()

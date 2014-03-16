@@ -29,9 +29,12 @@ def discover_feeds(c, feeds):
 
 def discover_contacts(c, contacts):
     if "email" in contacts:
-        n = EMailAddress(name=contacts["email"])
-        n.conf["kind"] = "primary contact"
-        c.add(n)
+        try:
+            n = EMailAddress(name=contacts["email"])
+            n.conf["kind"] = "primary contact"
+            c.add(n)
+        except ValueError:
+            pass
     if "ml" in contacts:
         try:
             n = EMailAddress(name=contacts["ml"])
