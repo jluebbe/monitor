@@ -241,6 +241,9 @@ class JSONAPI(HTTPService):
 class SpaceAPI(HTTPService):
     __mapper_args__ = {'polymorphic_identity': 'spaceapi'}
 
+class Feed(HTTPService):
+    __mapper_args__ = {'polymorphic_identity': 'feed'}
+
 class HostName(Node):
     __mapper_args__ = {'polymorphic_identity': 'hostname'}
 
@@ -261,6 +264,21 @@ class IP4Address(Node):
 
 class IP6Address(Node):
     __mapper_args__ = {'polymorphic_identity': 'ip6address'}
+
+class EMailAddress(Node):
+    __mapper_args__ = {'polymorphic_identity': 'emailaddress'}
+
+    @classmethod
+    def normalize(cls, name):
+        url = urlparse.urlsplit(name)
+        if not url.netloc:
+            name = name.lower()
+            if name[-1] == '.':
+                return name[:-1]
+            return "mailto:" + name
+        if url.scheme and not url.scheme == "mailto":
+            raise ValueError("invalid email address '%s'" % name)
+        return name
 
 class Result(Base):
     __tablename__ = "results"
