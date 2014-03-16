@@ -1,6 +1,10 @@
 {% extends "layout.html" %}
 {% block body %}
   <h1>node</h1>{{ node }}
+  {% if node.conf %}
+  <h2>conf</h2>
+  <pre>{{ node.conf|pprint(True) }}</pre>
+  {% endif %}
   <h2>results</h2>
   <ul>
   {% for result in results %}
