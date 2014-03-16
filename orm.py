@@ -139,6 +139,7 @@ class Node(Base):
     __table_args__ = (
         Index('ix_nodes_unique', 'type', 'name', unique=True),
     )
+    __normalize_name__ = True
     query = session.query_property()
 
     id = Column(Integer, primary_key=True)
@@ -185,7 +186,8 @@ class Node(Base):
         if not 'name' in kwargs:
             return object.__new__(cls)
         name = kwargs['name']
-        name = normalize(name)
+        if cls.__normalize_name__:
+            name = normalize(name)
 
         with session.no_autoflush:
             new = [x for x in session.new if type(x) == cls and x.name == name]
@@ -203,7 +205,9 @@ class Node(Base):
         return obj
 
     def __init__(self, name):
-        self.name = normalize(name)
+        if self.__class__.__normalize_name__:
+            name = normalize(name)
+        self.name = name
 
     def __repr__(self):
         return "<%s(%r, %r, created=%s)>" % (self.__class__.__name__, self.id, self.name, self.created)
@@ -222,6 +226,10 @@ class Node(Base):
         if not url.hostname:
             return self.name
         return url.hostname
+
+class Entity(Node):
+    __mapper_args__ = {'polymorphic_identity': 'entity'}
+    __normalize_name__ = False
 
 class HTTPService(Node):
     __mapper_args__ = {'polymorphic_identity': 'httpservice'}
