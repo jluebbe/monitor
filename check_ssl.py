@@ -2,7 +2,6 @@
 
 NAME = "ssl"
 
-import json
 import urlparse
 import socket
 from OpenSSL import SSL
@@ -10,7 +9,7 @@ from OpenSSL import SSL
 from ssl_ca import add_cert
 
 
-def fetch(host, port, timeout=10):
+def fetch(host, port):
     context = SSL.Context(SSL.TLSv1_METHOD)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection = SSL.Connection(context, s)
@@ -19,7 +18,7 @@ def fetch(host, port, timeout=10):
     connection.setblocking(1)
     try:
         connection.do_handshake()
-    except OpenSSL.SSL.WantReadError:
+    except SSL.WantReadError:
         connection.close()
         return {}
     chain = []
