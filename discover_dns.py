@@ -2,8 +2,6 @@
 
 from urlparse import urlparse
 
-from orm import session, HostName, DomainName, Result
-
 def discover(node, data):
     print node
     c = node.children["dns"]
@@ -19,12 +17,14 @@ def discover(node, data):
     for x in new:
         c.append(x[0](name=x[1]))
 
-for node in session.query(HostName):
-    result = node.results.filter(Result.method=="hostname").first()
-    if not result or not result.data:
-        print "no hostname result for %s" % node
-        continue
-    discover(node, result.data)
+from orm import session, HostName, DomainName, Result
 
-session.commit()
+if __name__=="__main__":
+    for node in session.query(HostName):
+        result = node.results.filter(Result.method=="hostname").first()
+        if not result or not result.data:
+            print "no hostname result for %s" % node
+            continue
+        discover(node, result.data)
+    session.commit()
 

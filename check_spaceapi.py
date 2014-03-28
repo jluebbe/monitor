@@ -41,9 +41,10 @@ def fetch(url, timeout=10):
 
 from orm import session, SpaceAPI, Result
 
-for x in session.query(SpaceAPI):
-    if not x.is_expired(NAME):
-        continue
-    x.results.append(Result(NAME, fetch(x.name)))
-    session.commit()
+if __name__=="__main__":
+    for x in session.query(SpaceAPI):
+        if not x.is_expired(NAME):
+            continue
+        x.results.append(Result(NAME, fetch(x.name)))
+        session.commit()
 

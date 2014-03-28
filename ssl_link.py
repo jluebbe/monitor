@@ -62,35 +62,34 @@ from ssl_ca import pin_to_fingerprint, fingerprint_to_pin, fingerprint, load_cer
 
 from orm import engine, session, SSLCert
 
-engine.echo = False
-
-for cert in session.query(SSLCert):
-    cert_x509 = crypto.load_certificate(crypto.FILETYPE_ASN1, cert.data_der)
-    subject_name = repr(cert_x509.get_subject().get_components())
-    subject_der = cert_x509.get_subject().der()
-    issuer_name = repr(cert_x509.get_issuer().get_components())
-    issuer_der = cert_x509.get_issuer().der()
-    if cert.is_anchor and subject_der==issuer_der:
-        print "Skipping self signed root cert"
-        cert.issuer_id = cert.id
-        continue
-    results = session.query(SSLCert).filter_by(subject_der=issuer_der).all()
-    if not results:
-        cert.issuer_id = None
-        if cert.is_anchor:
+if __name__=="__main__":
+    engine.echo = False
+    for cert in session.query(SSLCert):
+        cert_x509 = crypto.load_certificate(crypto.FILETYPE_ASN1, cert.data_der)
+        subject_name = repr(cert_x509.get_subject().get_components())
+        subject_der = cert_x509.get_subject().der()
+        issuer_name = repr(cert_x509.get_issuer().get_components())
+        issuer_der = cert_x509.get_issuer().der()
+        if cert.is_anchor and subject_der==issuer_der:
+            print "Skipping self signed root cert"
+            cert.issuer_id = cert.id
             continue
-        print "Issuer not found"
+        results = session.query(SSLCert).filter_by(subject_der=issuer_der).all()
+        if not results:
+            cert.issuer_id = None
+            if cert.is_anchor:
+                continue
+            print "Issuer not found"
+            print subject_name, issuer_name
+            continue
+        if len(results)>1:
+            cert.issuer_id = None
+            print "Multiple issuers found"
         print subject_name, issuer_name
-        continue
-    if len(results)>1:
-        cert.issuer_id = None
-        print "Multiple issuers found"
-    print subject_name, issuer_name
-    for cacert in results:
-        print "Issuer:", cacert
-        cacert_x509 = crypto.load_certificate(crypto.FILETYPE_ASN1, cacert.data_der)
-        verify(cert_x509, cacert_x509) 
-        cert.issuer_id = results[0].id
-
-session.commit()
+        for cacert in results:
+            print "Issuer:", cacert
+            cacert_x509 = crypto.load_certificate(crypto.FILETYPE_ASN1, cacert.data_der)
+            verify(cert_x509, cacert_x509) 
+            cert.issuer_id = results[0].id
+    session.commit()
 

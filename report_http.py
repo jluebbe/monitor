@@ -26,13 +26,13 @@ def report(url, headers):
 
 from orm import engine, Base, HTTPService, Result
 
-engine.echo = False
-
-for x in Base.query(HTTPService):
-    url = x.name
-    print url
-    result = x.results.filter(Result.method=="httpservice").first()
-    if result:
-        headers = result.data
-        report(url, headers)
+if __name__=="__main__":
+    engine.echo = False
+    for x in Base.query(HTTPService):
+        url = x.name
+        print url
+        result = x.results.filter(Result.method=="httpservice").first()
+        if result:
+            headers = result.data
+            report(url, headers)
 

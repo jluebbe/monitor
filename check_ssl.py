@@ -29,14 +29,15 @@ def fetch(host, port, timeout=10):
 
 from orm import session, HTTPService, Result
 
-for x in HTTPService.query:
-    print x.name
-    if not x.is_expired(NAME):
-        continue
-    url = urlparse.urlparse(x.name)
-    if url.scheme == 'https':
-      x.results.append(Result(NAME, fetch(url.hostname, url.port or 443)))
-    else:
-      continue
-    session.commit()
+if __name__=="__main__":
+    for x in HTTPService.query:
+        print x.name
+        if not x.is_expired(NAME):
+            continue
+        url = urlparse.urlparse(x.name)
+        if url.scheme == 'https':
+          x.results.append(Result(NAME, fetch(url.hostname, url.port or 443)))
+        else:
+          continue
+        session.commit()
 

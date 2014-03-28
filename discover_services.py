@@ -2,9 +2,6 @@
 
 from urlparse import urlparse
 
-from orm import session, DomainName, Result
-from orm import MailServer, NameServer, XMPPServer
-
 def discover(node, data):
     print node
     c = node.children["services"]
@@ -23,12 +20,15 @@ def discover(node, data):
     for x in new:
         c.append(x[0](name=x[1]))
 
-for node in session.query(DomainName):
-    result = node.results.filter(Result.method=="domainname").first()
-    if not result or not result.data:
-        print "no domainname result for %s" % node
-        continue
-    discover(node, result.data)
+from orm import session, DomainName, Result
+from orm import MailServer, NameServer, XMPPServer
 
-session.commit()
+if __name__=="__main__":
+    for node in session.query(DomainName):
+        result = node.results.filter(Result.method=="domainname").first()
+        if not result or not result.data:
+            print "no domainname result for %s" % node
+            continue
+        discover(node, result.data)
+    session.commit()
 

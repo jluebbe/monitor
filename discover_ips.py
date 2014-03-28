@@ -1,10 +1,5 @@
 #!/usr/bin/python
 
-from urlparse import urlparse
-
-from orm import session, HostName, Result
-from orm import IP4Address, IP6Address
-
 def discover(node, data):
     print node
     c = node.children["ips"]
@@ -19,12 +14,15 @@ def discover(node, data):
     for x in new:
         c.append(x[0](name=x[1]))
 
-for node in session.query(HostName):
-    result = node.results.filter(Result.method=="hostname").first()
-    if not result or not result.data:
-        print "no hostname result for %s" % node
-        continue
-    discover(node, result.data)
+from orm import session, HostName, Result
+from orm import IP4Address, IP6Address
 
-session.commit()
+if __name__=="__main__":
+    for node in session.query(HostName):
+        result = node.results.filter(Result.method=="hostname").first()
+        if not result or not result.data:
+            print "no hostname result for %s" % node
+            continue
+        discover(node, result.data)
+    session.commit()
 

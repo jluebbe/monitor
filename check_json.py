@@ -17,7 +17,8 @@ from orm import session, JSONAPI, Result
 
 import sqlalchemy
 
-for x in session.query(JSONAPI):
-    x.results.append(Result("jsonapi", fetch(x.name)))
-    session.commit()
+if __name__=="__main__":
+    for x in session.query(JSONAPI):
+        x.results.append(Result("jsonapi", fetch(x.name)))
+        session.commit()
 

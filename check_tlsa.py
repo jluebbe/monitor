@@ -29,16 +29,16 @@ def find_tlsa(hostname, port):
 
 from orm import engine, session, Node, Result
 
-engine.echo = False
-
-for x in session.query(Node):
-  if not x.is_expired(NAME, 60*60):
-    continue
-  url = urlparse.urlsplit(x.name)
-  if not url.hostname or not url.port:
-    continue
-  data = find_tlsa(url.hostname, url.port)
-  x.results.append(Result(NAME, data))
-  pprint({x.name: data})
-  session.commit()
+if __name__=="__main__":
+  engine.echo = False
+  for x in session.query(Node):
+    if not x.is_expired(NAME, 60*60):
+      continue
+    url = urlparse.urlsplit(x.name)
+    if not url.hostname or not url.port:
+      continue
+    data = find_tlsa(url.hostname, url.port)
+    x.results.append(Result(NAME, data))
+    pprint({x.name: data})
+    session.commit()
 

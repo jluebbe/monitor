@@ -50,15 +50,16 @@ def find_soa(hostname):
 
 from orm import session, HostName, Result
 
-for x in session.query(HostName):
-    if not x.is_expired(NAME):
-        continue
-    hostname = x.get_hostname()
-    data = {}
-    data.update(find_address(hostname))
-    data.update(find_cname(hostname))
-    data.update(find_soa(hostname))
-    x.results.append(Result(NAME, data))
-    pprint({hostname: data})
-    session.commit()
+if __name__=="__main__":
+    for x in session.query(HostName):
+        if not x.is_expired(NAME):
+            continue
+        hostname = x.get_hostname()
+        data = {}
+        data.update(find_address(hostname))
+        data.update(find_cname(hostname))
+        data.update(find_soa(hostname))
+        x.results.append(Result(NAME, data))
+        pprint({hostname: data})
+        session.commit()
 

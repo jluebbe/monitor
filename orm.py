@@ -342,10 +342,8 @@ class SSLKey(Base):
     def __repr__(self):
         return "<%s(key=%i, cert=%i)>" % (self.__class__.__name__, self.key, self.cert)
 
-Base.metadata.create_all(engine)
-session.remove()
-
 if __name__=="__main__":
+    Base.metadata.create_all(engine)
     #Crawler.query.delete()
     #Node.query.delete()
     c = SpaceAPI(name="https://hickerspace.org").children["manual"]

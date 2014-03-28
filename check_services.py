@@ -71,13 +71,14 @@ def show(hostname):
 
 from orm import session, DomainName, Result
 
-for x in session.query(DomainName):
-    hostname = x.name
-    data = {}
-    data.update(find_basic(hostname))
-    data.update(find_srv(hostname))
-    data.update(find_dnssd(hostname))
-    x.results.append(Result("domainname", data))
-    session.commit()
-    pprint({hostname: data})
+if __name__=="__main__":
+    for x in session.query(DomainName):
+        hostname = x.name
+        data = {}
+        data.update(find_basic(hostname))
+        data.update(find_srv(hostname))
+        data.update(find_dnssd(hostname))
+        x.results.append(Result("domainname", data))
+        session.commit()
+        pprint({hostname: data})
 

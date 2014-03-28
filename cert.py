@@ -22,28 +22,29 @@ def HPKP(cert):
     print('HPKP sha256 fp %s' % fp)
     print('HPKP sha256 pin %s' % fingerprint_to_pin(fp))
 
-context = SSL.Context(SSL.TLSv1_METHOD)
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-connection = SSL.Connection(context,s)
-connection.connect((sys.argv[1], 443))
-connection.setblocking(1)
-try:
-    connection.do_handshake()
-except OpenSSL.SSL.WantReadError:
-    print("Timeout")
-    quit()
+if __name__=="__main__":
+    context = SSL.Context(SSL.TLSv1_METHOD)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connection = SSL.Connection(context,s)
+    connection.connect((sys.argv[1], 443))
+    connection.setblocking(1)
+    try:
+        connection.do_handshake()
+    except OpenSSL.SSL.WantReadError:
+        print("Timeout")
+        quit()
 
-print(connection.get_peer_certificate().get_subject().commonName)
-print(connection.get_peer_certificate().digest("sha1"))
-for cert in connection.get_peer_cert_chain():
-    print(cert)
-    print(cert.get_subject())
-    print(cert.digest("sha1"))
-    print(hashlib.sha1(crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)).hexdigest())
-    HPKP(cert)
-    add_cert(cert)
+    print(connection.get_peer_certificate().get_subject().commonName)
+    print(connection.get_peer_certificate().digest("sha1"))
+    for cert in connection.get_peer_cert_chain():
+        print(cert)
+        print(cert.get_subject())
+        print(cert.digest("sha1"))
+        print(hashlib.sha1(crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)).hexdigest())
+        HPKP(cert)
+        add_cert(cert)
 
-from orm import session
+    from orm import session
 
-session.commit()
+    session.commit()
 

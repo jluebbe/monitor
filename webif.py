@@ -2,14 +2,17 @@
 
 import sys
 import logging
+import os.path
 
 import orm
 
 from flask import flash, render_template, jsonify
 from flask import Flask, Markup, Response
 
+this = os.path.dirname(os.path.abspath(__file__))
+
 app = Flask("monitor")
-app.config.from_pyfile("webif.conf")
+app.config.from_pyfile(os.path.join(this), "webif.conf")
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):

@@ -2,9 +2,6 @@
 
 from urlparse import urlparse
 
-from orm import session, SpaceAPI, Result
-from orm import HTTPService, HostName, Feed, EMailAddress
-
 def host_from_url(url):
     assert(isinstance(url, basestring))
     return urlparse(url).hostname
@@ -65,12 +62,15 @@ def discover(node, data):
     for n in c:
         node.children["spaceapi"].append(n)
 
-for node in session.query(SpaceAPI):
-    result = node.results.filter(Result.method=="spaceapi").first()
-    if not result or not result.data:
-        print "no spaceapi result for %s" % node
-        continue
-    discover(node, result.data)
+from orm import session, SpaceAPI, Result
+from orm import HTTPService, HostName, Feed, EMailAddress
 
-session.commit()
+if __name__=="__main__":
+    for node in session.query(SpaceAPI):
+        result = node.results.filter(Result.method=="spaceapi").first()
+        if not result or not result.data:
+            print "no spaceapi result for %s" % node
+            continue
+        discover(node, result.data)
+    session.commit()
 

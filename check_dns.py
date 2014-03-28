@@ -16,10 +16,11 @@ def check_ipv6(name):
   status, result = ctx.resolve(name, RR_TYPE_AAAA, RR_CLASS_IN)
   return (name, ub_strerror(status), result.secure, result.data.address_list)
 
-print check_ipv4("stratum0.net")
-print check_ipv6("stratum0.net")
-print check_ipv4("stratum0.org")
-print check_ipv4("dnssec.nl")
-print check_ipv4("google.de")
-print check_ipv6("google.de")
+if __name__=="__main__":
+    print check_ipv4("stratum0.net")
+    print check_ipv6("stratum0.net")
+    print check_ipv4("stratum0.org")
+    print check_ipv4("dnssec.nl")
+    print check_ipv4("google.de")
+    print check_ipv6("google.de")
 

@@ -15,8 +15,6 @@ def get_spki(cert_der):
 def hex(digest):
     return ":".join("%02x" % c for c in bytearray(digest))
 
-from orm import engine, session, SSLCert, SSLKey
-
 def rekey(cert):
     existing = dict((x.key, x) for x in cert.keys)
 
@@ -53,11 +51,12 @@ def rekey(cert):
         if not k in keys:
             cert.keys.remove(v)
 
-#engine.echo = False
+from orm import engine, session, SSLCert, SSLKey
 
-for cert in session.query(SSLCert):
-    print cert
-    rekey(cert)
-
-session.commit()
+if __name__=="__main__":
+    #engine.echo = False
+    for cert in session.query(SSLCert):
+        print cert
+        rekey(cert)
+    session.commit()
 

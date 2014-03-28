@@ -58,15 +58,16 @@ def query(address):
 
 from orm import session, Node, IP4Address, IP6Address, Result
 
-for x in session.query(Node).filter((Node.type == "ip4address") | (Node.type == "ip6address")).all():
-    if not x.is_expired(NAME, age=24*60*60):
-        continue
-    pprint(x)
-    address = x.name
-    data = {}
-    data["raw"] = query(address)
-    data["parsed"] = parse(data["raw"])
-    pprint(data)
-    x.results.append(Result(NAME, data))
-    session.commit()
+if __name__=="__main__":
+    for x in session.query(Node).filter((Node.type == "ip4address") | (Node.type == "ip6address")).all():
+        if not x.is_expired(NAME, age=24*60*60):
+            continue
+        pprint(x)
+        address = x.name
+        data = {}
+        data["raw"] = query(address)
+        data["parsed"] = parse(data["raw"])
+        pprint(data)
+        x.results.append(Result(NAME, data))
+        session.commit()
 
