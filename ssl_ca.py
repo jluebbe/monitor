@@ -4,10 +4,7 @@ BASE = "/etc/ssl/certs"
 
 import codecs
 import os
-import sys
-from Crypto.Util.asn1 import DerSequence
 import hashlib
-import socket
 from OpenSSL import crypto
 
 
