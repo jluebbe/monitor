@@ -1,8 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 NAME = "whois"
 
-from ipaddress import ip_address
+from ipaddr import IPAddress
 from pprint import pprint
 import subprocess
 
@@ -44,7 +44,7 @@ def parse(rpsl):
     return result
 
 def query(address):
-    address = ip_address(address)
+    address = IPAddress(address)
     print(address)
     p = subprocess.Popen(CMD + [str(address)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     result = p.communicate()[0]
