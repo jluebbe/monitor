@@ -7,7 +7,7 @@ import operator
 import hashlib
 try:
     import urlparse
-except ImportError: # python 3
+except ImportError:  # python 3
     import urllib.parse as urlparse
 
 from datetime import datetime, timedelta
@@ -27,9 +27,11 @@ from sqlalchemy.ext.associationproxy import association_proxy
 
 from sqlalchemy import event
 
-#see /usr/share/doc/python-sqlalchemy-doc/examples/association/dict_of_sets_with_default.py
+# see /usr/share/doc/python-sqlalchemy-doc/examples/association/dict_of_sets_with_default.py
+
 
 class JSONEncodedDict(TypeDecorator):
+
     "Represents an immutable structure as a json-encoded string."
 
     impl = VARCHAR
@@ -44,7 +46,9 @@ class JSONEncodedDict(TypeDecorator):
             value = json.loads(value)
         return value
 
+
 class MutationDict(Mutable, dict):
+
     @classmethod
     def coerce(cls, key, value):
         "Convert plain dictionaries to MutationDict."
@@ -72,13 +76,17 @@ class MutationDict(Mutable, dict):
 
 MutationDict.associate_with(JSONEncodedDict)
 
+
 class DefaultMappedCollection(MappedCollection):
+
     def __missing__(self, key):
         self[key] = x = Crawler(key)
         return x
 
 path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'monitor.sqlite')
 engine = create_engine('sqlite:///%s' % path, echo=True)
+
+
 @event.listens_for(engine, "connect")
 def on_connect(dbapi_con, con_record):
     cursor = dbapi_con.cursor()
@@ -92,10 +100,11 @@ session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=en
 Base = declarative_base()
 
 links = Table('links', Base.metadata,
-    Column('crawler_id', Integer, ForeignKey('crawlers.id'), index=True),
-    Column('child_id', Integer, ForeignKey('nodes.id'), index=True),
-    Index('ix_links_unique', 'crawler_id', 'child_id', unique=True),
-)
+              Column('crawler_id', Integer, ForeignKey('crawlers.id'), index=True),
+              Column('child_id', Integer, ForeignKey('nodes.id'), index=True),
+              Index('ix_links_unique', 'crawler_id', 'child_id', unique=True),
+              )
+
 
 class Crawler(Base):
     __tablename__ = 'crawlers'
@@ -110,6 +119,7 @@ class Crawler(Base):
 
     def __repr__(self):
         return "<%s(%s on %r)>" % (self.__class__.__name__, self.method, self.parent)
+
 
 class Node(Base):
     __tablename__ = "nodes"
@@ -127,10 +137,10 @@ class Node(Base):
     __mapper_args__ = {'polymorphic_on': type}
 
     _child_crawlers = relationship("Crawler",
-        backref=backref("parent", viewonly=True),
-        collection_class=lambda: DefaultMappedCollection(operator.attrgetter('method')),
-        cascade="all, delete, delete-orphan",
-    )
+                                   backref=backref("parent", viewonly=True),
+                                   collection_class=lambda: DefaultMappedCollection(operator.attrgetter('method')),
+                                   cascade="all, delete, delete-orphan",
+                                   )
 
     children = association_proxy(
         "_child_crawlers",
@@ -138,9 +148,9 @@ class Node(Base):
     )
 
     parent_crawlers = relationship("Crawler",
-        secondary=links,
-        backref=backref("children"),
-    )
+                                   secondary=links,
+                                   backref=backref("children"),
+                                   )
 
     # is this really useful?
     parents = association_proxy(
@@ -149,11 +159,11 @@ class Node(Base):
     )
 
     results = relationship("Result",
-        backref=backref('node'),
-        order_by="desc(Result.created)",
-        cascade="all, delete, delete-orphan",
-        lazy="dynamic",
-    )
+                           backref=backref('node'),
+                           order_by="desc(Result.created)",
+                           cascade="all, delete, delete-orphan",
+                           lazy="dynamic",
+                           )
 
     # make objects unique on name (in the scoped session)
     # see http://www.sqlalchemy.org/trac/wiki/UsageRecipes/UniqueObject
@@ -214,8 +224,8 @@ class Node(Base):
         return "<%s(%r, %r, created=%s)>" % (self.__class__.__name__, self.id, self.name, self.created)
 
     def is_expired(self, method, age=300):
-        limit = datetime.utcnow()-timedelta(seconds=age)
-        result = self.results.filter(Result.method==method).first()
+        limit = datetime.utcnow() - timedelta(seconds=age)
+        result = self.results.filter(Result.method == method).first()
         if not result:
             return True
         if not result.data:
@@ -228,42 +238,55 @@ class Node(Base):
             return self.name
         return url.hostname
 
+
 class Entity(Node):
     __mapper_args__ = {'polymorphic_identity': 'entity'}
     __normalize_name__ = False
 
+
 class HTTPService(Node):
     __mapper_args__ = {'polymorphic_identity': 'httpservice'}
+
 
 class JSONAPI(HTTPService):
     __mapper_args__ = {'polymorphic_identity': 'jsonapi'}
 
+
 class SpaceAPI(HTTPService):
     __mapper_args__ = {'polymorphic_identity': 'spaceapi'}
+
 
 class Feed(HTTPService):
     __mapper_args__ = {'polymorphic_identity': 'feed'}
 
+
 class HostName(Node):
     __mapper_args__ = {'polymorphic_identity': 'hostname'}
+
 
 class DomainName(HostName):
     __mapper_args__ = {'polymorphic_identity': 'domainname'}
 
+
 class MailServer(HostName):
     __mapper_args__ = {'polymorphic_identity': 'mailserver'}
+
 
 class NameServer(HostName):
     __mapper_args__ = {'polymorphic_identity': 'nameserver'}
 
+
 class XMPPServer(HostName):
     __mapper_args__ = {'polymorphic_identity': 'xmppserver'}
+
 
 class IP4Address(Node):
     __mapper_args__ = {'polymorphic_identity': 'ip4address'}
 
+
 class IP6Address(Node):
     __mapper_args__ = {'polymorphic_identity': 'ip6address'}
+
 
 class EMailAddress(Node):
     __mapper_args__ = {'polymorphic_identity': 'emailaddress'}
@@ -281,6 +304,7 @@ class EMailAddress(Node):
         if url.scheme and not url.scheme == "mailto":
             raise ValueError("invalid email address '%s'" % name)
         return name
+
 
 class Result(Base):
     __tablename__ = "results"
@@ -303,6 +327,7 @@ class Result(Base):
     def __repr__(self):
         return "<%s(%i, node=%i, %r, created=%s)>" % (self.__class__.__name__, self.id, self.node_id, self.method, self.created)
 
+
 class SSLCert(Base):
     __tablename__ = "sslcerts"
     query = session.query_property()
@@ -321,6 +346,7 @@ class SSLCert(Base):
     def __repr__(self):
         return "<%s %i (%s, issuer=%r, created=%s)>" % (self.__class__.__name__, self.id, self.subject, self.issuer_id, self.created)
 
+
 class SSLKey(Base):
     __tablename__ = "sslkeys"
     __table_args__ = (
@@ -333,8 +359,8 @@ class SSLKey(Base):
     cert_id = Column(Integer, ForeignKey('sslcerts.id'))
 
     cert = relationship("SSLCert",
-        backref=backref('keys', cascade="all, delete-orphan"),
-    )
+                        backref=backref('keys', cascade="all, delete-orphan"),
+                        )
 
     def __init__(self, key):
         self.key = key
@@ -342,10 +368,10 @@ class SSLKey(Base):
     def __repr__(self):
         return "<%s(key=%i, cert=%i)>" % (self.__class__.__name__, self.key, self.cert)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     Base.metadata.create_all(engine)
-    #Crawler.query.delete()
-    #Node.query.delete()
+    # Crawler.query.delete()
+    # Node.query.delete()
     c = SpaceAPI(name="https://hickerspace.org").children["manual"]
     c.append(DomainName(name="hickerspace.org"))
     c.append(HTTPService(name="https://hickerspace.org"))
@@ -362,4 +388,3 @@ if __name__=="__main__":
     pprint(session.query(Node).all())
     print("HTTPServices:")
     pprint(session.query(HTTPService).all())
-

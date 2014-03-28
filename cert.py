@@ -3,10 +3,12 @@
 import sys
 import codecs
 from Crypto.Util.asn1 import DerSequence
-import hashlib, socket
+import hashlib
+import socket
 from OpenSSL import SSL, crypto
 
 from ssl_ca import pin_to_fingerprint, fingerprint_to_pin, fingerprint, add_cert
+
 
 def HPKP(cert):
     der = crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
@@ -22,10 +24,10 @@ def HPKP(cert):
     print('HPKP sha256 fp %s' % fp)
     print('HPKP sha256 pin %s' % fingerprint_to_pin(fp))
 
-if __name__=="__main__":
+if __name__ == "__main__":
     context = SSL.Context(SSL.TLSv1_METHOD)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    connection = SSL.Connection(context,s)
+    connection = SSL.Connection(context, s)
     connection.connect((sys.argv[1], 443))
     connection.setblocking(1)
     try:
@@ -47,4 +49,3 @@ if __name__=="__main__":
     from orm import session
 
     session.commit()
-

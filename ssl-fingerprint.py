@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 
-import socket, ssl, pprint, hashlib
+import socket
+import ssl
+import pprint
+import hashlib
 
-if __name__=="__main__":
+if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(('www.google.com', 443))
     # require a certificate from the server
@@ -17,5 +20,4 @@ if __name__=="__main__":
     pprint.pprint(ssl_sock.getpeercert())
     pprint.pprint(ssl_sock.cipher())
     # note that closing the SSLSocket will also close the underlying socket
-    ssl_sock.close()  
-
+    ssl_sock.close()

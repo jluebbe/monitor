@@ -3,17 +3,21 @@
 import sys
 import codecs
 from Crypto.Util import asn1
-import hashlib, socket
+import hashlib
+import socket
 from OpenSSL import SSL, crypto
 from M2Crypto import X509 as M2X509
+
 
 def get_spki(cert_der):
     cert = M2X509.load_cert_der_string(cert_der)
     spki = cert.get_pubkey()
     return spki.as_der()
 
+
 def hex(digest):
     return ":".join("%02x" % c for c in bytearray(digest))
+
 
 def rekey(cert):
     existing = dict((x.key, x) for x in cert.keys)
@@ -25,8 +29,8 @@ def rekey(cert):
 
     keys = set()
 
-    #keys.add("sha1/%s" % hex(hashlib.sha1(cert.data_der).digest()))
-    #keys.add("sha256/%s" % hex(hashlib.sha256(cert.data_der).digest()))
+    # keys.add("sha1/%s" % hex(hashlib.sha1(cert.data_der).digest()))
+    # keys.add("sha256/%s" % hex(hashlib.sha256(cert.data_der).digest()))
     keys.add("sha1/%s" % hashlib.sha1(cert.data_der).hexdigest())
     keys.add("sha256/%s" % hashlib.sha256(cert.data_der).hexdigest())
 
@@ -35,8 +39,8 @@ def rekey(cert):
 
     spki = get_spki(cert.data_der)
     digest = hashlib.sha1(spki).digest()
-    #keys.add("hpkp/fp/sha1/%s" % digest.encode("hex_codec"))
-    #keys.add("hpkp/pin/sha1/%s" % digest.encode("base64_codec").strip())
+    # keys.add("hpkp/fp/sha1/%s" % digest.encode("hex_codec"))
+    # keys.add("hpkp/pin/sha1/%s" % digest.encode("base64_codec").strip())
     digest = hashlib.sha256(spki).digest()
     keys.add("hpkp/fp/sha256/%s" % digest.encode("hex_codec"))
     keys.add("hpkp/pin/sha256/%s" % digest.encode("base64_codec").strip())
@@ -53,10 +57,9 @@ def rekey(cert):
 
 from orm import engine, session, SSLCert, SSLKey
 
-if __name__=="__main__":
-    #engine.echo = False
+if __name__ == "__main__":
+    # engine.echo = False
     for cert in session.query(SSLCert):
         print cert
         rekey(cert)
     session.commit()
-

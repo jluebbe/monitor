@@ -2,27 +2,30 @@
 
 from urlparse import urlparse
 
+
 def host_from_url(url):
     assert(isinstance(url, basestring))
     return urlparse(url).hostname
+
 
 def discover_feeds(c, feeds):
     if "name" in feeds and "url" in feeds:
         n = Feed(name=feeds["url"])
         n.conf["kind"] = feeds["name"]
         c.add(n)
-    elif isinstance(feeds, list): # list of feeds
+    elif isinstance(feeds, list):  # list of feeds
         for props in feeds:
             n = Feed(name=props["url"])
             print n.conf
             n.conf["kind"] = props["name"]
             c.add(n)
-    elif isinstance(feeds, dict): # dict of feeds
+    elif isinstance(feeds, dict):  # dict of feeds
         for kind, props in feeds.items():
             n = Feed(name=props["url"])
             print props
             n.conf["kind"] = kind
             c.add(n)
+
 
 def discover_contacts(c, contacts):
     if "email" in contacts:
@@ -43,6 +46,7 @@ def discover_contacts(c, contacts):
         n = Feed(name="https://twitter.com/%s" % contacts["twitter"].lstrip("@"))
         n.conf["kind"] = "primary twitter feed"
         c.add(n)
+
 
 def discover(node, data):
     print node
@@ -65,12 +69,11 @@ def discover(node, data):
 from orm import session, SpaceAPI, Result
 from orm import HTTPService, HostName, Feed, EMailAddress
 
-if __name__=="__main__":
+if __name__ == "__main__":
     for node in session.query(SpaceAPI):
-        result = node.results.filter(Result.method=="spaceapi").first()
+        result = node.results.filter(Result.method == "spaceapi").first()
         if not result or not result.data:
             print "no spaceapi result for %s" % node
             continue
         discover(node, result.data)
     session.commit()
-

@@ -2,6 +2,7 @@
 
 from urlparse import urlparse
 
+
 def discover(node, data):
     print node
     c = node.children["spaceapidirectory"]
@@ -13,14 +14,13 @@ def discover(node, data):
 
 from orm import session, JSONAPI, SpaceAPI, Result
 
-if __name__=="__main__":
+if __name__ == "__main__":
     for node in session.query(JSONAPI):
         if not node.conf["discover"] == "spaceapidirectory":
             continue
-        result = node.results.filter(Result.method=="jsonapi").first()
+        result = node.results.filter(Result.method == "jsonapi").first()
         if result is None:
             print "no jsonapi result for %s" % node
             continue
         discover(node, result.data)
         session.commit()
-

@@ -6,21 +6,26 @@ import codecs
 import os
 import sys
 from Crypto.Util.asn1 import DerSequence
-import hashlib, socket
+import hashlib
+import socket
 from OpenSSL import crypto
+
 
 def pin_to_fingerprint(pin):
     return ":".join(c.encode("hex") for c in pin.decode("base64"))
- 
+
+
 def fingerprint_to_pin(fingerprint):
-    x = fingerprint.replace(":","")
+    x = fingerprint.replace(":", "")
     x = codecs.decode(x, "hex_codec")
     x = codecs.encode(x, "base64_codec")
     return x.strip().decode("ascii")
 
+
 def fingerprint(spki, hash):
     """Calculate fingerprint of a SubjectPublicKeyInfo given a hash function."""
     return ":".join("%02x" % c for c in bytearray(hash(spki).digest()))
+
 
 def load_cert(filename):
     pem = open(filename, "r").read()
@@ -28,12 +33,13 @@ def load_cert(filename):
 
 from orm import session, SSLCert
 
+
 def add_cert(cert, is_anchor=False):
-    #print(cert)
+    # print(cert)
     print(cert.get_subject(), '%08x' % cert.get_subject().hash(), fingerprint(cert.get_subject().der(), hashlib.md5))
-    #print(cert.get_subject().get_components())
-    #print(cert.digest("sha1"))
-    #print(hashlib.sha1(crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)).hexdigest())
+    # print(cert.get_subject().get_components())
+    # print(cert.digest("sha1"))
+    # print(hashlib.sha1(crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)).hexdigest())
 
     subject = repr(cert.get_subject().get_components())
     subject_der = cert.get_subject().der()
@@ -50,7 +56,7 @@ def add_cert(cert, is_anchor=False):
     session.add(x)
     return x
 
-if __name__=="__main__":
+if __name__ == "__main__":
     for name in os.listdir(BASE):
         name = os.path.join(BASE, name)
         if not name.endswith('.pem'):
@@ -61,4 +67,3 @@ if __name__=="__main__":
         cert = load_cert(name)
         add_cert(cert, is_anchor=True)
         session.commit()
-

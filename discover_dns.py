@@ -2,6 +2,7 @@
 
 from urlparse import urlparse
 
+
 def discover(node, data):
     print node
     c = node.children["dns"]
@@ -19,12 +20,11 @@ def discover(node, data):
 
 from orm import session, HostName, DomainName, Result
 
-if __name__=="__main__":
+if __name__ == "__main__":
     for node in session.query(HostName):
-        result = node.results.filter(Result.method=="hostname").first()
+        result = node.results.filter(Result.method == "hostname").first()
         if not result or not result.data:
             print "no hostname result for %s" % node
             continue
         discover(node, result.data)
     session.commit()
-

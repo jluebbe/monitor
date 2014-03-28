@@ -14,9 +14,11 @@ this = os.path.dirname(os.path.abspath(__file__))
 app = Flask("monitor")
 app.config.from_pyfile(os.path.join(this), "webif.conf")
 
+
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     orm.session.remove()
+
 
 @app.template_filter('link')
 def link_filter(x):
@@ -34,6 +36,7 @@ def link_filter(x):
 @app.route('/')
 def index():
     return render_template("index.html", nodes=orm.Node.query.all())
+
 
 @app.route('/node/<int:id>')
 def node(id):
@@ -54,4 +57,3 @@ def node(id):
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
     app.run(port=9090, debug=True)
-
