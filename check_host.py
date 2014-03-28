@@ -3,6 +3,7 @@
 NAME = "hostname"
 
 import dns.resolver
+import socket
 from pprint import pprint
 
 resolver = dns.resolver.Resolver(configure=False)
@@ -21,10 +22,14 @@ def find_address(hostname):
             result["a"].append(x.address)
     except dns.exception.DNSException:
         pass
+    except socket.error:
+        pass
     try:
         for x in query(hostname, "AAAA"):
             result["aaaa"].append(x.address)
     except dns.exception.DNSException:
+        pass
+    except socket.error:
         pass
     return result
 
@@ -35,6 +40,8 @@ def find_cname(hostname):
         for x in query(hostname, "CNAME"):
             result["cname"].append(str(x.target))
     except dns.exception.DNSException:
+        pass
+    except socket.error:
         pass
     return result
 
@@ -50,13 +57,15 @@ def find_soa(hostname):
             result["soa"] = str(response.authority[0].name)
     except dns.exception.DNSException:
         pass
+    except socket.error:
+        pass
     return result
 
 from orm import session, HostName, Result
 
 if __name__ == "__main__":
     for x in session.query(HostName):
-        if not x.is_expired(NAME):
+        if not x.is_expired(NAME, age=60 * 60):
             continue
         hostname = x.get_hostname()
         data = {}
