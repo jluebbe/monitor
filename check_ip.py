@@ -57,7 +57,7 @@ def query(address):
     result = result.split('\n')
     return result
 
-from orm import session, Node, IP4Address, IP6Address, Result
+from orm import session, Node, Result
 
 if __name__ == "__main__":
     for x in session.query(Node).filter((Node.type == "ip4address") | (Node.type == "ip6address")).all():
