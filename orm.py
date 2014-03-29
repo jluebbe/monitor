@@ -381,6 +381,9 @@ if __name__ == "__main__":
     c.append(DomainName(name="stratum0.org"))
     c.append(DomainName(name="stratum0.net"))
     c.append(HostName(name="status.stratum0.org"))
+    HTTPService(name="https://stratum0.net")
+    HTTPService(name="https://ipv4.stratum0.net")
+    HTTPService(name="https://ipv6.stratum0.net")
     directory = JSONAPI(name="http://spaceapi.net/directory.json")
     directory.conf = {"discover": "spaceapidirectory"}
     session.commit()
