@@ -15,6 +15,8 @@ def pretty_json(data):
 def fetch(url, timeout=10):
     assert(isinstance(url, basestring))
     url = urlparse.urlparse(url)
+    if not url.scheme in ['http', 'https']:
+        return {}
     try:
         page = requests.get(url.geturl(), timeout=timeout, allow_redirects=False)
         page.headers['status'] = page.status_code
