@@ -72,6 +72,19 @@ def find_soa(hostname):
         pass
     return result
 
+
+def find_sshfp(hostname):
+    result = {"sshfp": []}
+    try:
+        for x in query(hostname, "SSHFP"):
+            result["sshfp"].append((x.algorithm, x.fp_type, x.fingerprint.encode("hex-codec")))
+    except dns.exception.DNSException:
+        pass
+    except socket.error:
+        pass
+    return result
+
+
 from orm import session, HostName, Result
 
 if __name__ == "__main__":
@@ -85,6 +98,7 @@ if __name__ == "__main__":
         data.update(find_address(hostname))
         data.update(find_cname(hostname))
         data.update(find_soa(hostname))
+        data.update(find_sshfp(hostname))
         x.results.append(Result(NAME, data))
         pprint({hostname: data})
         session.commit()
