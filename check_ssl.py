@@ -35,7 +35,7 @@ from orm import session, HTTPService, Result
 if __name__ == "__main__":
     for x in HTTPService.query:
         print x.name
-        if not x.is_expired(NAME):
+        if not x.is_expired(NAME, age=60 * 60):
             continue
         url = urlparse.urlparse(x.name)
         if url.scheme == 'https':
