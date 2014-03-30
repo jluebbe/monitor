@@ -4,11 +4,20 @@ NAME = "hostname"
 
 import dns.resolver
 import socket
+import ipaddr
 from pprint import pprint
 
 resolver = dns.resolver.Resolver(configure=False)
 resolver.nameservers = ['8.8.8.8']
 resolver.cache = dns.resolver.Cache()
+
+
+def is_ipaddr(x):
+    try:
+        ipaddr.IPAddress(x)
+    except ValueError:
+        return False
+    return True
 
 
 def query(*args):
@@ -52,9 +61,11 @@ def find_soa(hostname):
         query = dns.message.make_query(hostname, dns.rdatatype.SOA)
         response = dns.query.tcp(query, resolver.nameservers[0])
         if response.answer:
-            result["soa"] = str(response.answer[0].name)
+            soa = str(response.answer[0].name)
         elif response.authority:
-            result["soa"] = str(response.authority[0].name)
+            soa = str(response.authority[0].name)
+        if not soa == ".":
+            result["soa"] = soa
     except dns.exception.DNSException:
         pass
     except socket.error:
@@ -68,6 +79,8 @@ if __name__ == "__main__":
         if not x.is_expired(NAME, age=60 * 60):
             continue
         hostname = x.get_hostname()
+        if is_ipaddr(hostname):
+            continue
         data = {}
         data.update(find_address(hostname))
         data.update(find_cname(hostname))

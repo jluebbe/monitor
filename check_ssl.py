@@ -14,7 +14,10 @@ def fetch(host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection = SSL.Connection(context, s)
     connection.set_tlsext_host_name(host)
-    connection.connect((host, port))
+    try:
+        connection.connect((host, port))
+    except socket.gaierror:
+        return {}
     connection.setblocking(1)
     try:
         connection.do_handshake()
