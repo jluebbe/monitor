@@ -9,6 +9,7 @@ import paramiko
 def fetch(host, port):
     result = {}
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(10)
     try:
         s.connect((host, port))
     except socket.gaierror:
