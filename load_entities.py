@@ -3,6 +3,19 @@
 import urlparse
 import yaml
 
+"""
+Some terminology:
+    - An Entity represents a person or an organisation. It doesn't correspond
+    directly to anything on the network.
+    - An Entity is the Owner of a node if it has administrative authority over
+    that node.
+    - An Entity is the User of a node if directly uses functionality provided
+    by that node but is has no administrative authority over it.
+
+Entities and their nodes are defined in the "entities.yaml" file and loaded
+into the DB by this script.
+"""
+
 if __name__ == "__main__":
     with open("entities.yaml") as f:
         data = yaml.load(f)
