@@ -28,12 +28,12 @@ def fetch(host, port):
         result["rsa-bits"] = k.get_bits()
     return result
 
-from orm import session, HostName, Result
+from orm import session, Node, Result
 
 if __name__ == "__main__":
-    for x in session.query(HostName):
+    for x in session.query(Node).filter((Node.type == "ip4address") | (Node.type == "ip6address")).all():
         if not x.is_expired(NAME, age=7 * 24 * 60 * 60, retry=60 * 60):
             continue
-        hostname = x.get_hostname()
-        x.results.append(Result(NAME, fetch(hostname, 22)))
+        host = x.name
+        x.results.append(Result(NAME, fetch(host, 22)))
         session.commit()
