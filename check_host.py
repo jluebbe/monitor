@@ -60,11 +60,12 @@ def find_soa(hostname):
     try:
         query = dns.message.make_query(hostname, dns.rdatatype.SOA)
         response = dns.query.tcp(query, resolver.nameservers[0])
+        soa = ""
         if response.answer:
             soa = str(response.answer[0].name)
         elif response.authority:
             soa = str(response.authority[0].name)
-        if not soa == ".":
+        if soa and not soa == ".":
             result["soa"] = soa
     except dns.exception.DNSException:
         pass
