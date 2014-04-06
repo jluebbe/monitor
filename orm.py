@@ -223,14 +223,17 @@ class Node(Base):
     def __repr__(self):
         return "<%s(%r, %r, created=%s)>" % (self.__class__.__name__, self.id, self.name, self.created)
 
-    def is_expired(self, method, age=300):
-        limit = datetime.utcnow() - timedelta(seconds=age)
+    def is_expired(self, method, age=300, retry=None):
+        if retry is None:
+            retry = age
         result = self.results.filter(Result.method == method).first()
         if not result:
             return True
-        if not result.data:
+        if (datetime.utcnow() - result.created) > timedelta(seconds=age):
             return True
-        return result.created < limit
+        if not result.data and (datetime.utcnow() - result.created) > timedelta(seconds=retry):
+            return True
+        return False
 
     def get_hostname(self):
         url = urlparse.urlsplit(self.name)
