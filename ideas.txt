@@ -1,0 +1,77 @@
+(see https://pad.stratum0.org/p/monitor)
+
+Module
+	* Import von http://spaceapi.net/ und hackerspaces.org:
+		* http://spaceapi.net/directory.json
+		* http://hackerspaces.org/wiki/Special:Ask/-5B-5BCategory:Hackerspace-5D-5D-5B-5Bhackerspace-20status::active-5D-5D/-3FWebsite/mainlabel%3Dhackerspace/order%3DDESC/sort%3D/limit%3D500/format%3Djson
+	* Prüfen und Discovery von:
+		* Alle Domains/Hosts
+			* DNSSEC
+			* DLV
+			* DNS-SD
+			* IPv6
+				* Tunnel vs. Native
+			* SSHFP
+			* Self-Hosted?
+				* Whois -> netname
+			* Geo-IP?
+		* DNS-Server
+		* Mailserver
+			* DANE
+			* Spam scores?
+		* XMPP-Server
+			* http://xmpppy.sourceforge.net/examples/xtalk.py
+			* DANE
+			* In-Band Registration?
+			* Transports?
+		* SIP
+			* ENUM-Support?
+		* IRC-Server
+		* Web-Server
+			* HTTP/HTTPS
+			* DANE
+			* HSTS (HTTP Strict Transport Security)
+			* HPKP (HTTP Public Key Pinning)
+			* Werden JS-Libraries von externen CDNs geladen?
+			* Wiki/Blog/Podcast/...
+				* Wie aktuell?
+			* Öffentlicher Kalender? i/vCal-URL?
+				* Anzahl der Events im kommenden Monat?
+			* EtherPad
+		* NTP
+			* Statistik
+		* SDR mit remote Access
+		* OpenID
+		* Social Network/Diaspora/StatusNet
+		* Netzwerkinfrastruktur?
+			* Dynamische vs. Statische IP?
+			* https://spacefed.net/wiki/index.php/SpaceFED
+		* Retro-Dienste
+			* BBS
+			* Telnet
+			* UUCP
+			* Finger
+			* Gopher
+			* Net-News
+		* Externe Dienste:
+			* Thingiverse
+			* Twitter
+			* Facebook
+			* Google +
+			* Flickr
+			* Tumblr
+			* GitHub
+			* Youtube
+			* Jabber-Rangliste
+			* CTF-Rangliste: https://ctftime.org/
+	* Punkte anhand von SpaceAPI-Infos verteilen
+		* Lange Öffnungszeiten
+		* Features in SpaceAPI-JSON
+	* Manuell Informationen sammeln:
+		* SMTP Submission
+		* IMAP(S)
+		* IRC-Channel?
+		* DynDNS-Dienst
+		* Einzugsbereich (bis zu andern Spaces)?
+	* Web-Interface zur Anzeige
+
