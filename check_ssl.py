@@ -12,9 +12,13 @@ from ssl_ca import add_cert
 
 def starttls_smtp(s, servername):
     buf = ""
-    while not ("220" in buf and "\r\n" in buf):
+    while not "\r\n" in buf:
+        if "\r\n" in buf and not buf.startswith("220 "):
+            return False
         time.sleep(0.1)
         buf += s.recv(1024)
+        if not buf:
+            return False
     buf = ""
     s.send("EHLO %s\r\n" % ("jluebbe.github.io",))
     starttls = False
@@ -28,13 +32,19 @@ def starttls_smtp(s, servername):
             continue
         time.sleep(0.1)
         buf += s.recv(1024)
+        if not buf:
+            return False
     if not starttls:
         return False
     s.send("STARTTLS\n")
     buf = ""
-    while not ("220" in buf and "\r\n" in buf):
+    while not "\r\n" in buf:
+        if "\r\n" in buf and not buf.startswith("220 "):
+            return False
         time.sleep(0.1)
         buf += s.recv(1024)
+        if not buf:
+            return False
     return True
 
 
@@ -46,6 +56,8 @@ def starttls_xmpp(s, servername):
             return False
         time.sleep(0.1)
         buf += s.recv(1024)
+        if not buf:
+            return False
     if not "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'>" in buf:
         return False
     s.send("<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>")
@@ -55,6 +67,16 @@ def starttls_xmpp(s, servername):
             return False
         time.sleep(0.1)
         buf += s.recv(1024)
+        if not buf:
+            return False
+    return True
+
+
+def starttls(s, servername, scheme):
+    if scheme in ['smtp']:
+        return starttls_smtp(s, servername)
+    elif scheme in ['xmpp-client', 'xmpp-server']:
+        return starttls_xmpp(s, servername)
     return True
 
 
@@ -63,23 +85,20 @@ def fetch(host, port, scheme, servername=None):
         servername = host
     context = SSL.Context(SSL.TLSv1_METHOD)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setblocking(1)
+    s.settimeout(10.0)
     try:
         s.connect((host, port))
-    except socket.gaierror:
+        if not starttls(s, servername, scheme):
+            return {}
+    except (socket.error, socket.gaierror):
         return {}
-    if scheme in ['smtp']:
-        if not starttls_smtp(s, servername):
-            return {}
-    elif scheme in ['xmpp-client', 'xmpp-server']:
-        if not starttls_xmpp(s, servername):
-            return {}
     connection = SSL.Connection(context, s)
     connection.set_connect_state()
     connection.set_tlsext_host_name(host)
-    connection.setblocking(1)
     try:
         connection.do_handshake()
-    except SSL.WantReadError:
+    except (SSL.WantReadError, SSL.Error):
         connection.close()
         return {}
     chain = []
@@ -88,16 +107,16 @@ def fetch(host, port, scheme, servername=None):
         chain.append((c.subject, c.data_hash()))
     return {'chain': chain}
 
-from orm import session, HTTPService, Result
+from orm import session, Node, Result
 
 if __name__ == "__main__":
-    for x in HTTPService.query:
+    for x in Node.query:
         print x.name
-        if not x.is_expired(NAME, age=60 * 60):
+        if not x.is_expired(NAME, age=60 * 60 * 24 * 5):
             continue
         url = urlparse.urlparse(x.name)
         if url.scheme in ['smtp', 'https', 'xmpp-client']:
-            x.results.append(Result(NAME, fetch(url.hostname, url.port or 443), url.scheme))
+            x.results.append(Result(NAME, fetch(url.hostname, url.port, url.scheme)))
         else:
             continue
         session.commit()
