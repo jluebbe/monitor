@@ -23,7 +23,10 @@ def rekey(cert):
     existing = dict((x.key, x) for x in cert.keys)
 
     cert_x509 = crypto.load_certificate(crypto.FILETYPE_ASN1, cert.data_der)
-    pub_der = crypto.dump_privatekey(crypto.FILETYPE_ASN1, cert_x509.get_pubkey())
+    try:
+        pub_der = crypto.dump_privatekey(crypto.FILETYPE_ASN1, cert_x509.get_pubkey())
+    except crypto.Error: # some elliptic curve keys fail to dump
+        return
     subject_der = cert_x509.get_subject().der()
     issuer_der = cert_x509.get_issuer().der()
 
