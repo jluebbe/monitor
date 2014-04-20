@@ -343,6 +343,8 @@ class SSLCert(Base):
     subject_der = Column(LargeBinary(), nullable=False, index=True)
     data_der = Column(LargeBinary(), nullable=False, unique=True, index=True)
 
+    issuer = relationship("SSLCert", remote_side=[id])
+
     def data_hash(self):
         return "sha256/%s" % hashlib.sha256(self.data_der).hexdigest()
 
@@ -369,7 +371,7 @@ class SSLKey(Base):
         self.key = key
 
     def __repr__(self):
-        return "<%s(key=%i, cert=%i)>" % (self.__class__.__name__, self.key, self.cert)
+        return "<%s(key=%s, cert=%r)>" % (self.__class__.__name__, self.key, self.cert)
 
 if __name__ == "__main__":
     Base.metadata.create_all(engine)
