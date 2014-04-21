@@ -125,6 +125,58 @@ class Reporter(object):
         if data.get('secure', 0):
             return "DNSSEC enabled"
 
+    @register(orm.HTTPService, "tlsa")
+    @hint("tlsa")
+    def _http_tlsa_record(self, hint_tlsa, data):
+        keys = []
+        for usage, selector, match, val in data["tcp"]:
+            if selector == 0: # full certificate
+                key = ""
+            elif selector == 1: # SubjectPublicKeyInfo
+                key = "hpkp/fp/"
+            else:
+                raise NotImplementedError()
+            if match == 0: # exact match
+                raise NotImplementedError()
+            elif match == 1: # SHA256
+                key += "sha256/"
+            elif match == 2: # SHA512
+                key += "sha512/"
+            else:
+                raise NotImplementedError()
+            key += val
+            if usage == 0: # "CA constraint"
+                raise NotImplementedError()
+            elif usage == 1: # "service certificate constraint"
+                raise NotImplementedError()
+            elif usage == 2: # "trust anchor assertion"
+                raise NotImplementedError()
+            elif usage == 3: # "domain-issued certificate"
+                keys.append(("=", key))
+            else:
+                raise NotImplementedError()
+        if keys:
+            print(keys)
+            hint_tlsa['keys'] = keys
+            return "TLSA supported"
+
+    @register(orm.HTTPService, "ssl")
+    @hint("tlsa")
+    def _http_tlsa_ssl(self, hint_tlsa, data):
+        keys = hint_tlsa.get('keys', [])
+        resolved = data.get("resolved")
+        print keys, resolved
+        if not resolved:
+            return
+        for match, key in keys:
+            if match == "=":
+                if key == resolved[0][-1]:
+                    return "TLSA good"
+                else:
+                    return "TLSA bad"
+            else:
+                raise NotImplementedError()
+
 
 if __name__ == "__main__":
     engine.echo = False
