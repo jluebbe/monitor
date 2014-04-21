@@ -15,6 +15,7 @@ Module
 			* Self-Hosted?
 				* Whois -> netname
 			* Geo-IP?
+			* Multipath TCP
 		* DNS-Server
 		* Mailserver
 			* DANE
