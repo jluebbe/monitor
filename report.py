@@ -8,6 +8,12 @@ import hashlib
 
 
 class Registy(type):
+    _seq = -1
+
+    @classmethod
+    def seq(cls):
+        cls._seq += 1
+        return cls._seq
 
     def __init__(cls, name, bases, attrs):
         cls.registry = []
@@ -15,11 +21,12 @@ class Registy(type):
             props = getattr(val, 'register', None)
             if props is not None:
                 cls.registry.append((val,) + props)
-
+        cls.registry.sort(key=lambda x: getattr(x[0], 'seq'))
 
 def register(*args):
     def decorator(f):
         f.register = tuple(args)
+        f.seq = Registy.seq()
         return f
     return decorator
 
