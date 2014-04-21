@@ -23,6 +23,7 @@ class Registy(type):
                 cls.registry.append((val,) + props)
         cls.registry.sort(key=lambda x: getattr(x[0], 'seq'))
 
+
 def register(*args):
     def decorator(f):
         f.register = tuple(args)
@@ -130,28 +131,28 @@ class Reporter(object):
     def _http_tlsa_record(self, hint_tlsa, data):
         keys = []
         for usage, selector, match, val in data["tcp"]:
-            if selector == 0: # full certificate
+            if selector == 0:  # full certificate
                 key = ""
-            elif selector == 1: # SubjectPublicKeyInfo
+            elif selector == 1:  # SubjectPublicKeyInfo
                 key = "hpkp/fp/"
             else:
                 raise NotImplementedError()
-            if match == 0: # exact match
+            if match == 0:  # exact match
                 raise NotImplementedError()
-            elif match == 1: # SHA256
+            elif match == 1:  # SHA256
                 key += "sha256/"
-            elif match == 2: # SHA512
+            elif match == 2:  # SHA512
                 key += "sha512/"
             else:
                 raise NotImplementedError()
             key += val
-            if usage == 0: # "CA constraint"
+            if usage == 0:  # "CA constraint"
                 raise NotImplementedError()
-            elif usage == 1: # "service certificate constraint"
+            elif usage == 1:  # "service certificate constraint"
                 raise NotImplementedError()
-            elif usage == 2: # "trust anchor assertion"
+            elif usage == 2:  # "trust anchor assertion"
                 raise NotImplementedError()
-            elif usage == 3: # "domain-issued certificate"
+            elif usage == 3:  # "domain-issued certificate"
                 keys.append(("=", key))
             else:
                 raise NotImplementedError()

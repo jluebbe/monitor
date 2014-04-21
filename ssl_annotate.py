@@ -28,7 +28,7 @@ def annotate(result):
 
 if __name__ == "__main__":
     # engine.echo = False
-    #for result in session.query(Result).filter(Result.method == 'ssl').group_by(Result.node_id).order_by(Result.created.desc()):
+    # for result in session.query(Result).filter(Result.method == 'ssl').group_by(Result.node_id).order_by(Result.created.desc()):
     for result in session.query(Result).filter(Result.method == 'ssl').order_by(Result.created.desc()):
         annotate(result)
     session.commit()
