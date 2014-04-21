@@ -94,11 +94,12 @@ def fetch(host, port, scheme, servername=None):
     except (socket.error, socket.gaierror):
         return {}
     connection = SSL.Connection(context, s)
+    connection.setblocking(1)
     connection.set_connect_state()
     connection.set_tlsext_host_name(host)
     try:
         connection.do_handshake()
-    except (SSL.WantReadError, SSL.Error):
+    except SSL.Error:
         connection.close()
         return {}
     chain = []
