@@ -42,10 +42,10 @@ def discover_contacts(c, contacts):
             c.add(n)
         except ValueError:
             pass
-    if "twitter" in contacts:
-        n = Feed(name="https://twitter.com/%s" % contacts["twitter"].lstrip("@"))
-        n.conf["kind"] = "primary twitter feed"
-        c.add(n)
+    # if "twitter" in contacts:
+    #    n = Feed(name="https://twitter.com/%s" % contacts["twitter"].lstrip("@"))
+    #    n.conf["kind"] = "primary twitter feed"
+    #    c.add(n)
 
 
 def discover(node, data):
